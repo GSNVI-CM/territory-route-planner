@@ -681,6 +681,77 @@ def parse_locks(text):
             pass
     return locks
 
+def parse_day_limits(text):
+    limits = {}
+    for line in (text or "").splitlines():
+        if "=" not in line:
+            continue
+        raw_date, raw_count = line.split("=", 1)
+        try:
+            dt = pd.to_datetime(raw_date.strip()).date()
+            count = int(re.search(r"\d+", raw_count).group(0))
+            if count >= 0:
+                limits[dt] = count
+        except Exception:
+            pass
+    return limits
+
+def parse_route_preferences(text):
+    preferences = {}
+    route_names = list(ROUTE_ORDER)
+    city_aliases = {
+        "carmel mountain": "Carmel Mountain",
+        "4s": "4S",
+        "rancho bernardo": "Rancho Bernardo",
+        "rb": "Rancho Bernardo",
+        "poway": "Poway",
+        "mira mesa": "Mira Mesa",
+        "sorrento valley": "Sorrento Valley",
+        "utc": "UTC",
+        "la jolla": "La Jolla",
+        "del mar": "Del Mar",
+        "solana beach": "Solana Beach",
+        "rancho santa fe": "Rancho Santa Fe",
+        "sports arena": "Sports Arena",
+        "point loma": "Point Loma",
+        "ocean beach": "Ocean Beach",
+        "pacific beach": "Pacific Beach",
+        "carlsbad": "Carlsbad",
+        "oceanside": "Oceanside / Vista",
+        "vista": "Oceanside / Vista",
+        "escondido": "Escondido / San Marcos",
+        "san marcos": "Escondido / San Marcos",
+        "eastlake": "Eastlake / Otay",
+        "otay": "Eastlake / Otay",
+        "chula vista": "Chula Vista / National City",
+        "national city": "Chula Vista / National City",
+        "la mesa": "La Mesa",
+        "lemon grove": "Lemon Grove",
+        "spring valley": "Spring Valley",
+        "santee": "Santee",
+        "el cajon": "El Cajon / Rancho San Diego",
+        "rancho san diego": "El Cajon / Rancho San Diego",
+    }
+    for line in (text or "").splitlines():
+        if "=" not in line:
+            continue
+        raw_date, raw_routes = line.split("=", 1)
+        try:
+            dt = pd.to_datetime(raw_date.strip()).date()
+        except Exception:
+            continue
+        txt = raw_routes.lower()
+        found = []
+        for route in route_names:
+            if route.lower() in txt and route not in found:
+                found.append(route)
+        for key, route in city_aliases.items():
+            if key in txt and route not in found:
+                found.append(route)
+        if found:
+            preferences[dt] = found
+    return preferences
+
 def workdays_for_month(year, month, blocked_dates):
     days = []
     _, last = calendar.monthrange(year, month)
@@ -746,9 +817,11 @@ def schedule_row(row, visit_date, note=""):
         "Updated Notes": "",
     }
 
-def generate_month(doctors, year, month, blocked_dates, locks, max_per_day, monday_office_day=True, target_per_day=None):
+def generate_month(doctors, year, month, blocked_dates, locks, max_per_day, monday_office_day=True, target_per_day=None, day_route_preferences=None, day_max_overrides=None):
     target_per_day = target_per_day or RULES["target_offices_per_day"]
     min_per_day = RULES["min_offices_per_day"]
+    day_route_preferences = day_route_preferences or {}
+    day_max_overrides = day_max_overrides or {}
 
     due = doctors[
         doctors["_Routable"] &
@@ -799,9 +872,25 @@ def generate_month(doctors, year, month, blocked_dates, locks, max_per_day, mond
         if available <= 0:
             continue
 
+        day_limit = day_max_overrides.get(dt, max_per_day)
+        available = min(available, day_limit)
+        if available <= 0:
+            continue
+
         target_for_day = min(target_per_day, available)
-        if len(remaining) <= target_for_day:
+        preferred_routes = day_route_preferences.get(dt, [])
+
+        if preferred_routes:
+            preferred = remaining[remaining["_Route Cluster"].isin(preferred_routes)]
+            take_indexes = list(preferred.index[:target_for_day])
+            # Event days stay intentionally lighter and close to the event. Do not top off with far-away routes.
+            note = "Built around calendar event / preferred route"
+            if not take_indexes:
+                take_indexes = list(remaining.index[:min(target_for_day, len(remaining))])
+                note = "No preferred-route doctors due; filled with next due doctors"
+        elif len(remaining) <= target_for_day:
             take_indexes = list(remaining.index)
+            note = "Smart grouped by route/priority"
         else:
             primary_route = remaining.iloc[0]["_Route Cluster"]
             same_route = list(remaining[remaining["_Route Cluster"] == primary_route].index[:target_for_day])
@@ -815,10 +904,12 @@ def generate_month(doctors, year, month, blocked_dates, locks, max_per_day, mond
                         take_indexes.append(idx)
                     if len(take_indexes) >= target_for_day:
                         break
+            day_rows_preview = remaining.loc[take_indexes]
+            route_count_preview = day_rows_preview["_Route Cluster"].nunique()
+            note = "Smart grouped by route/priority" if route_count_preview == 1 else "Route topped off to avoid a light day"
 
         day_rows = remaining.loc[take_indexes]
         route_count = day_rows["_Route Cluster"].nunique()
-        note = "Smart grouped by route/priority" if route_count == 1 else "Route topped off to avoid a light day"
 
         for _, rr in day_rows.iterrows():
             rows.append(schedule_row(rr, dt, note))
@@ -894,12 +985,20 @@ with st.sidebar:
     )
 
     st.header("July calendar")
-    st.caption("These are the July commitments you gave me. They are prefilled so the planner works around them.")
-    st.write("**7/3:** Office closed")
-    st.write("**7/13:** Field day")
-    st.write("**7/14:** Office day")
-    st.write("**7/16:** SDCOS meeting at West Pac near Sorrento Valley/Mira Mesa")
-    st.write("**7/28:** Epioxa Dinner at California English in Sorrento Valley")
+    st.caption("Edit these July commitments before generating the schedule.")
+    july_events_text = st.text_area(
+        "July event notes",
+        value=(
+            "2026-07-01 5:00 PM - Alcon dinner at Amalfi Llama\n"
+            "2026-07-03 - Office closed\n"
+            "2026-07-13 - Field day\n"
+            "2026-07-14 - Office day\n"
+            "2026-07-16 - SDCOS meeting at WestPac near Sorrento Valley/Mira Mesa\n"
+            "2026-07-28 - Epioxa Dinner at California English in Sorrento Valley\n"
+            "2026-07-31 - Lunch & Learn with Dorothy Wang's office"
+        ),
+        height=160,
+    )
 
     st.header("Calendar Control")
     blocked_text = st.text_area(
@@ -910,6 +1009,7 @@ with st.sidebar:
     )
     lock_text = st.text_area(
         "Doctor/date locks",
+        value="Dorothy Wang = 2026-07-31",
         placeholder="One per line:\nDorothy Wang = 2026-07-31\nClarke = 2026-07-08",
         help="Use any searchable part of the doctor's name."
     )
@@ -971,9 +1071,21 @@ with tab_plan:
         doctors = st.session_state["doctors"]
         blocked_dates = parse_dates(blocked_text)
         locks = parse_locks(lock_text)
+        day_route_preferences = parse_route_preferences(preferred_routes_text)
+        day_max_overrides = parse_day_limits(day_limits_text)
 
         if st.button("Generate full-month schedule", type="primary"):
-            schedule, due = generate_month(doctors, int(selected_year), int(selected_month), blocked_dates, locks, int(max_per_day), monday_office_day=monday_office_day)
+            schedule, due = generate_month(
+                doctors,
+                int(selected_year),
+                int(selected_month),
+                blocked_dates,
+                locks,
+                int(max_per_day),
+                monday_office_day=monday_office_day,
+                day_route_preferences=day_route_preferences,
+                day_max_overrides=day_max_overrides,
+            )
             st.session_state["schedule"] = schedule
             st.session_state["due"] = due
 
