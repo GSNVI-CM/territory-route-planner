@@ -893,16 +893,30 @@ with st.sidebar:
         format_func=lambda m: calendar.month_name[m],
     )
 
+    st.header("July calendar")
+    st.caption("These are the July commitments you gave me. They are prefilled so the planner works around them.")
+    st.write("**7/3:** Office closed")
+    st.write("**7/13:** Field day")
+    st.write("**7/14:** Office day")
+    st.write("**7/16:** SDCOS meeting at West Pac near Sorrento Valley/Mira Mesa")
+    st.write("**7/28:** Epioxa Dinner at California English in Sorrento Valley")
+
     st.header("Calendar Control")
     blocked_text = st.text_area(
-        "Blocked dates",
+        "Blocked full days",
+        value="2026-07-03\n2026-07-14",
         placeholder="One per line:\n2026-07-03\n2026-07-14",
-        help="Use this for office days, PTO, CE events, or days you do not want field visits."
+        help="Use this for office closed, office days, PTO, or days you do not want field visits."
     )
     lock_text = st.text_area(
         "Doctor/date locks",
         placeholder="One per line:\nDorothy Wang = 2026-07-31\nClarke = 2026-07-08",
         help="Use any searchable part of the doctor's name."
+    )
+    preferred_routes_text = st.text_area(
+        "Preferred route days",
+        value="2026-07-16 = Sorrento Valley / Mira Mesa\n2026-07-28 = Sorrento Valley / Mira Mesa",
+        help="Use this for event days where you want the field route to stay near the event location."
     )
     max_per_day = st.slider("Max offices per field day", 6, 10, RULES["target_offices_per_day"])
 
@@ -911,8 +925,8 @@ with st.sidebar:
     st.write("Top 20: monthly")
     st.write("Rank 21–60: every 6 weeks")
     st.write("Remaining: quarterly")
-    monday_office_day = st.checkbox("Auto-block Mondays as La Jolla office days", value=True)
-    st.caption("v2 adds smarter San Diego route pods and suggested stop order. Maps come next.")
+    monday_office_day = st.checkbox("Auto-block every Monday as La Jolla office day", value=False)
+    st.caption("July defaults: 7/3 and 7/14 are blocked. 7/13 is available as a field day.")
 
 tab_upload, tab_plan, tab_history, tab_rules = st.tabs(["Upload", "Plan Month", "Upload History", "Rules"])
 
