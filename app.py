@@ -1015,8 +1015,13 @@ with st.sidebar:
     )
     preferred_routes_text = st.text_area(
         "Preferred route days",
-        value="2026-07-16 = Sorrento Valley / Mira Mesa\n2026-07-28 = Sorrento Valley / Mira Mesa",
+        value="2026-07-01 = UTC / La Jolla / Sorrento Valley\n2026-07-16 = Sorrento Valley / Mira Mesa\n2026-07-28 = Sorrento Valley / Mira Mesa\n2026-07-31 = Carmel Mountain",
         help="Use this for event days where you want the field route to stay near the event location."
+    )
+    day_limits_text = st.text_area(
+        "Lighter days / max stops",
+        value="2026-07-01 = 5\n2026-07-16 = 5\n2026-07-28 = 5\n2026-07-31 = 4",
+        help="Use this for dinners, meetings, and lunch & learns. Lunch & Learn default is 4 total stops including the meeting office."
     )
     max_per_day = st.slider("Max offices per field day", 6, 10, RULES["target_offices_per_day"])
 
