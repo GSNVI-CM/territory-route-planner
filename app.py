@@ -41,10 +41,11 @@ RULES = {
 ROUTE_KEYWORDS = {
     "Carlsbad": ["carlsbad"],
     "Oceanside / Vista": ["oceanside", "vista"],
-    "Encinitas / Del Mar / Solana / RSF": ["encinitas", "del mar", "solana beach", "rancho santa fe", "rsf"],
+    "Encinitas North / Carlsbad Fill-in": ["north encinitas", "leucadia"],
+    "Encinitas South / Del Mar / Solana / RSF": ["south encinitas", "encinitas", "del mar", "solana beach", "rancho santa fe", "rsf"],
     "San Marcos / Escondido": ["san marcos", "escondido"],
     "Poway / Ramona": ["poway", "ramona"],
-    "Rancho Bernardo / 4S / Mira Mesa": ["rancho bernardo", "4s", "carmel mountain", "mira mesa"],
+    "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa": ["rancho bernardo", "4s", "carmel mountain", "mira mesa"],
     "Kearny Mesa / Clairemont / Serra Mesa": ["kearny", "clairemont", "serra mesa"],
     "La Mesa / Lemon Grove / Spring Valley": ["la mesa", "lemon grove", "spring valley"],
     "El Cajon / Rancho San Diego": ["el cajon", "rancho san diego"],
@@ -53,6 +54,118 @@ ROUTE_KEYWORDS = {
     "Chula Vista / South Bay": ["chula vista", "national city", "bonita", "eastlake", "south bay"],
     "La Jolla / UTC": ["la jolla", "utc", "university city"],
     "Hillcrest / North Park / Central": ["hillcrest", "north park", "mission hills", "bankers hill"],
+}
+
+
+ROUTE_ORDER = [
+    "Carlsbad",
+    "Oceanside / Vista",
+    "Encinitas North / Carlsbad Fill-in",
+    "Encinitas South / Del Mar / Solana / RSF",
+    "San Marcos / Escondido",
+    "Poway / Ramona",
+    "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
+    "Kearny Mesa / Clairemont / Serra Mesa",
+    "La Jolla / UTC",
+    "Hillcrest / North Park / Central",
+    "Coronado / Downtown",
+    "Chula Vista / South Bay",
+    "El Cajon / Rancho San Diego",
+    "La Mesa / Lemon Grove / Spring Valley",
+    "Santee / Tierrasanta",
+    "Unassigned",
+]
+
+ROUTE_SEQUENCE = {route: i for i, route in enumerate(ROUTE_ORDER)}
+
+ZIP_ROUTE_OVERRIDES = {
+    "92008": "Carlsbad",
+    "92009": "Carlsbad",
+    "92010": "Carlsbad",
+    "92011": "Carlsbad",
+    "92054": "Oceanside / Vista",
+    "92056": "Oceanside / Vista",
+    "92057": "Oceanside / Vista",
+    "92058": "Oceanside / Vista",
+    "92081": "Oceanside / Vista",
+    "92083": "Oceanside / Vista",
+    "92084": "Oceanside / Vista",
+    "92024": "Encinitas South / Del Mar / Solana / RSF",
+    "92075": "Encinitas South / Del Mar / Solana / RSF",
+    "92091": "Encinitas South / Del Mar / Solana / RSF",
+    "92067": "Encinitas South / Del Mar / Solana / RSF",
+    "92069": "San Marcos / Escondido",
+    "92078": "San Marcos / Escondido",
+    "92025": "San Marcos / Escondido",
+    "92026": "San Marcos / Escondido",
+    "92027": "San Marcos / Escondido",
+    "92029": "San Marcos / Escondido",
+    "92064": "Poway / Ramona",
+    "92065": "Poway / Ramona",
+    "92127": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
+    "92128": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
+    "92129": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
+    "92126": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
+    "92123": "Kearny Mesa / Clairemont / Serra Mesa",
+    "92111": "Kearny Mesa / Clairemont / Serra Mesa",
+    "92117": "Kearny Mesa / Clairemont / Serra Mesa",
+    "92110": "Kearny Mesa / Clairemont / Serra Mesa",
+    "92109": "Kearny Mesa / Clairemont / Serra Mesa",
+    "92122": "La Jolla / UTC",
+    "92037": "La Jolla / UTC",
+    "92093": "La Jolla / UTC",
+    "92103": "Hillcrest / North Park / Central",
+    "92104": "Hillcrest / North Park / Central",
+    "92116": "Hillcrest / North Park / Central",
+    "92101": "Coronado / Downtown",
+    "92118": "Coronado / Downtown",
+    "91910": "Chula Vista / South Bay",
+    "91911": "Chula Vista / South Bay",
+    "91913": "Chula Vista / South Bay",
+    "91914": "Chula Vista / South Bay",
+    "91915": "Chula Vista / South Bay",
+    "91902": "Chula Vista / South Bay",
+    "91950": "Chula Vista / South Bay",
+    "92020": "El Cajon / Rancho San Diego",
+    "92019": "El Cajon / Rancho San Diego",
+    "91941": "La Mesa / Lemon Grove / Spring Valley",
+    "91942": "La Mesa / Lemon Grove / Spring Valley",
+    "91945": "La Mesa / Lemon Grove / Spring Valley",
+    "91977": "La Mesa / Lemon Grove / Spring Valley",
+    "92071": "Santee / Tierrasanta",
+    "92124": "Santee / Tierrasanta",
+}
+
+CITY_ROUTE_OVERRIDES = {
+    "carlsbad": "Carlsbad",
+    "oceanside": "Oceanside / Vista",
+    "vista": "Oceanside / Vista",
+    "del mar": "Encinitas South / Del Mar / Solana / RSF",
+    "solana beach": "Encinitas South / Del Mar / Solana / RSF",
+    "rancho santa fe": "Encinitas South / Del Mar / Solana / RSF",
+    "san marcos": "San Marcos / Escondido",
+    "escondido": "San Marcos / Escondido",
+    "poway": "Poway / Ramona",
+    "ramona": "Poway / Ramona",
+    "rancho bernardo": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
+    "mira mesa": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
+    "la jolla": "La Jolla / UTC",
+    "university city": "La Jolla / UTC",
+    "utc": "La Jolla / UTC",
+    "hillcrest": "Hillcrest / North Park / Central",
+    "north park": "Hillcrest / North Park / Central",
+    "downtown": "Coronado / Downtown",
+    "coronado": "Coronado / Downtown",
+    "chula vista": "Chula Vista / South Bay",
+    "national city": "Chula Vista / South Bay",
+    "bonita": "Chula Vista / South Bay",
+    "el cajon": "El Cajon / Rancho San Diego",
+    "rancho san diego": "El Cajon / Rancho San Diego",
+    "la mesa": "La Mesa / Lemon Grove / Spring Valley",
+    "lemon grove": "La Mesa / Lemon Grove / Spring Valley",
+    "spring valley": "La Mesa / Lemon Grove / Spring Valley",
+    "santee": "Santee / Tierrasanta",
+    "tierrasanta": "Santee / Tierrasanta",
 }
 
 SYSTEM_SHEETS = ["Doctors", "Visits", "Routes", "Settings", "Route Builder", "Cleanup", "Import Review"]
@@ -157,16 +270,56 @@ def cadence_from_rank(rank):
         pass
     return RULES["remaining_cadence_days"]
 
+def clean_zip(value):
+    if value is None or pd.isna(value):
+        return ""
+    match = re.search(r"\b(\d{5})\b", str(value))
+    return match.group(1) if match else ""
+
 def infer_route(row, route_col, address_col, city_col, zip_col):
+    # Keep an explicit route/pod when the spreadsheet already has one.
     if route_col and pd.notna(row.get(route_col)) and str(row.get(route_col)).strip():
         val = str(row.get(route_col)).strip()
         if val.lower() not in ["nan", "none", "unassigned"]:
             return val
+
+    zip_value = clean_zip(row.get(zip_col)) if zip_col else ""
+    if zip_value in ZIP_ROUTE_OVERRIDES:
+        return ZIP_ROUTE_OVERRIDES[zip_value]
+
+    city_text = str(row.get(city_col, "")).lower().strip() if city_col else ""
+    for city_key, route in CITY_ROUTE_OVERRIDES.items():
+        if city_key in city_text:
+            return route
+
     text = " ".join(str(row.get(c, "")) for c in [address_col, city_col, zip_col] if c).lower()
     for route, words in ROUTE_KEYWORDS.items():
         if any(w in text for w in words):
             return route
     return "Unassigned"
+
+def route_sort_value(route):
+    return ROUTE_SEQUENCE.get(str(route), 999)
+
+def route_direction_label(route):
+    directions = {
+        "Carlsbad": "North County coastal. Keep separate from Oceanside/Vista unless needed.",
+        "Oceanside / Vista": "North County inland/coastal. Do not mix with Carlsbad by default.",
+        "Encinitas North / Carlsbad Fill-in": "Use as Carlsbad fill-in when needed.",
+        "Encinitas South / Del Mar / Solana / RSF": "South Encinitas, Del Mar, Solana Beach, Rancho Santa Fe.",
+        "San Marcos / Escondido": "North inland route.",
+        "Poway / Ramona": "Poway route; Ramona quarterly and never grouped with Pod 4.",
+        "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa": "Fill-in route between 4S, Poway, Carmel Mountain, and Mira Mesa.",
+        "Kearny Mesa / Clairemont / Serra Mesa": "Central cluster with many offices; good filler route from North Park.",
+        "La Jolla / UTC": "Office/UTC route.",
+        "Hillcrest / North Park / Central": "Closest-to-home central route.",
+        "Coronado / Downtown": "Downtown/Coronado route.",
+        "Chula Vista / South Bay": "South Bay route.",
+        "El Cajon / Rancho San Diego": "East County route; pairs El Cajon with Rancho San Diego.",
+        "La Mesa / Lemon Grove / Spring Valley": "East/Central route; do not mix with Santee by default.",
+        "Santee / Tierrasanta": "Santee pairs with Tierrasanta.",
+    }
+    return directions.get(str(route), "Needs review; app could not confidently assign a route cluster.")
 
 def score_from_referrals(row, cols):
     total = 0
@@ -219,6 +372,8 @@ def prepare_data(sheets):
         out["_Priority Rank"] = out["_Referral Score"].rank(method="first", ascending=False).astype(int)
 
     out["_Route Cluster"] = out.apply(lambda r: infer_route(r, route_col, address_col, city_col, zip_col), axis=1)
+    out["_Route Sort"] = out["_Route Cluster"].apply(route_sort_value)
+    out["_Route Guidance"] = out["_Route Cluster"].apply(route_direction_label)
 
     out["_Last Visit"] = pd.NaT
     if last_visit_col:
@@ -292,18 +447,52 @@ def workdays_for_month(year, month, blocked_dates):
             days.append(dt)
     return days
 
+def assign_stop_order(day_df):
+    if day_df.empty:
+        return day_df
+    ordered = day_df.copy()
+    ordered["_Local Sort"] = ordered["Zip"].apply(clean_zip)
+    ordered = ordered.sort_values(["Route Sort", "_Local Sort", "Priority Rank", "Doctor Name"], ascending=[True, True, True, True])
+    ordered["Stop #"] = range(1, len(ordered) + 1)
+    return ordered.drop(columns=["_Local Sort"], errors="ignore")
+
+def office_day_row(visit_date):
+    return {
+        "Date": visit_date,
+        "Day": visit_date.strftime("%A"),
+        "Stop #": "",
+        "Doctor Name": "OFFICE DAY",
+        "Practice Name": "Gordon Schanzlin New Vision Institute",
+        "Practice Address": "",
+        "City": "La Jolla",
+        "Zip": "",
+        "Route Cluster": "La Jolla / UTC",
+        "Route Sort": route_sort_value("La Jolla / UTC"),
+        "Route Guidance": "Office/admin day; no field route scheduled unless you manually add one.",
+        "Priority Rank": "",
+        "Last Visit": "",
+        "Next Due": "",
+        "Due Status": "Office Day",
+        "Planner Note": "Auto-added Monday office day",
+        "Visit Completed": "",
+        "Updated Notes": "",
+    }
+
 def schedule_row(row, visit_date, note=""):
     last_visit = row["_Last Visit"]
     next_due = row["_Next Due"]
     return {
         "Date": visit_date,
         "Day": visit_date.strftime("%A"),
+        "Stop #": "",
         "Doctor Name": row["_Doctor Name"],
         "Practice Name": row["_Practice Name"],
         "Practice Address": row["_Practice Address"],
         "City": row["_City"],
         "Zip": row["_Zip"],
         "Route Cluster": row["_Route Cluster"],
+        "Route Sort": int(row["_Route Sort"]) if pd.notna(row["_Route Sort"]) else 999,
+        "Route Guidance": row.get("_Route Guidance", route_direction_label(row["_Route Cluster"])),
         "Priority Rank": int(row["_Priority Rank"]) if pd.notna(row["_Priority Rank"]) else "",
         "Last Visit": last_visit.date() if pd.notna(last_visit) else "",
         "Next Due": next_due.date() if pd.notna(next_due) else "",
@@ -313,23 +502,29 @@ def schedule_row(row, visit_date, note=""):
         "Updated Notes": "",
     }
 
-def generate_month(doctors, year, month, blocked_dates, locks, max_per_day):
+def generate_month(doctors, year, month, blocked_dates, locks, max_per_day, monday_office_day=True, target_per_day=None):
+    target_per_day = target_per_day or RULES["target_offices_per_day"]
     due = doctors[
         doctors["_Routable"] &
         doctors["_Due Status"].isin(["Overdue", "Due Soon", "No Visit History"])
     ].copy()
 
-    if due.empty:
-        return pd.DataFrame(), due
-
-    due["_Sort Overdue"] = pd.to_numeric(due["_Days Overdue"], errors="coerce").fillna(-9999)
+    due["_Sort Overdue"] = pd.to_numeric(due.get("_Days Overdue", 0), errors="coerce").fillna(-9999)
     due = due.sort_values(
-        ["_Priority Rank", "_Sort Overdue", "_Route Cluster", "_Doctor Name"],
+        ["_Priority Rank", "_Sort Overdue", "_Route Sort", "_Doctor Name"],
         ascending=[True, False, True, True]
     )
 
     rows = []
     scheduled_names = set()
+
+    days = workdays_for_month(year, month, blocked_dates)
+    if monday_office_day:
+        for dt in days:
+            if dt.weekday() == 0:
+                rows.append(office_day_row(dt))
+
+    field_days = [dt for dt in days if not (monday_office_day and dt.weekday() == 0)]
 
     # Apply doctor/date locks first.
     for key, lock_date in locks.items():
@@ -342,45 +537,57 @@ def generate_month(doctors, year, month, blocked_dates, locks, max_per_day):
 
     remaining = due[~due["_Doctor Name"].isin(scheduled_names)].copy()
 
-    days = workdays_for_month(year, month, blocked_dates)
-    # Avoid days already filled by locks when possible.
     locked_counts = {}
     for r in rows:
-        locked_counts[r["Date"]] = locked_counts.get(r["Date"], 0) + 1
+        if r["Doctor Name"] != "OFFICE DAY":
+            locked_counts[r["Date"]] = locked_counts.get(r["Date"], 0) + 1
 
     day_idx = 0
-    grouped = remaining.groupby("_Route Cluster", sort=True)
+    previous_route = None
 
-    for route, group in grouped:
-        group = group.sort_values(["_Priority Rank", "_Sort Overdue"], ascending=[True, False])
-        chunk = []
-        for _, r in group.iterrows():
-            chunk.append(r)
-            if len(chunk) >= max_per_day:
-                while day_idx < len(days) and locked_counts.get(days[day_idx], 0) >= max_per_day:
-                    day_idx += 1
-                if day_idx >= len(days):
-                    break
-                dt = days[day_idx]
-                for rr in chunk:
-                    rows.append(schedule_row(rr, dt, "Smart grouped by route/priority"))
-                day_idx += 1
-                chunk = []
-        if chunk:
-            while day_idx < len(days) and locked_counts.get(days[day_idx], 0) >= max_per_day:
-                day_idx += 1
-            if day_idx < len(days):
-                dt = days[day_idx]
-                for rr in chunk:
-                    rows.append(schedule_row(rr, dt, "Smart grouped by route/priority"))
-                day_idx += 1
+    # Route pods are scheduled in geography order. Within each pod, highest-priority doctors go first.
+    for route, group in remaining.groupby("_Route Cluster", sort=False):
+        group = group.sort_values(["_Priority Rank", "_Sort Overdue", "_Doctor Name"], ascending=[True, False, True])
+        doctors_in_route = list(group.iterrows())
+        cursor = 0
 
-        if day_idx >= len(days):
+        while cursor < len(doctors_in_route) and day_idx < len(field_days):
+            # Move forward if the current day is already full from locks.
+            while day_idx < len(field_days) and locked_counts.get(field_days[day_idx], 0) >= max_per_day:
+                day_idx += 1
+            if day_idx >= len(field_days):
+                break
+
+            dt = field_days[day_idx]
+            available = max_per_day - locked_counts.get(dt, 0)
+            take = min(len(doctors_in_route) - cursor, min(available, target_per_day))
+            if take <= 0:
+                day_idx += 1
+                continue
+
+            note = "Smart grouped by route/priority"
+            if previous_route == route:
+                note = "Same route continued because more offices were due"
+            for _, rr in doctors_in_route[cursor:cursor + take]:
+                rows.append(schedule_row(rr, dt, note))
+            cursor += take
+            previous_route = route
+            day_idx += 1
+
+        if day_idx >= len(field_days):
             break
 
     schedule = pd.DataFrame(rows)
     if not schedule.empty:
-        schedule = schedule.sort_values(["Date", "Route Cluster", "Priority Rank", "Doctor Name"]).reset_index(drop=True)
+        ordered_days = []
+        for _, day_df in schedule.groupby("Date", sort=True):
+            if (day_df["Doctor Name"] == "OFFICE DAY").all():
+                ordered_days.append(day_df)
+            else:
+                ordered_days.append(assign_stop_order(day_df))
+        schedule = pd.concat(ordered_days, ignore_index=True)
+        schedule["_Stop Sort"] = pd.to_numeric(schedule["Stop #"], errors="coerce").fillna(0)
+        schedule = schedule.sort_values(["Date", "_Stop Sort", "Route Sort", "Priority Rank", "Doctor Name"], na_position="last").drop(columns=["_Stop Sort"]).reset_index(drop=True)
 
     return schedule, due
 
@@ -455,7 +662,8 @@ with st.sidebar:
     st.write("Top 20: monthly")
     st.write("Rank 21–60: every 6 weeks")
     st.write("Remaining: quarterly")
-    st.write("No maps/driving order in this version")
+    monday_office_day = st.checkbox("Auto-block Mondays as La Jolla office days", value=True)
+    st.caption("v2 adds smarter San Diego route pods and suggested stop order. Maps come next.")
 
 tab_upload, tab_plan, tab_history, tab_rules = st.tabs(["Upload", "Plan Month", "Upload History", "Rules"])
 
@@ -487,7 +695,7 @@ with tab_upload:
             c4.metric("Due / overdue", int((doctors["_Routable"] & doctors["_Due Status"].isin(["Overdue", "Due Soon", "No Visit History"])).sum()))
 
             st.subheader("Preview")
-            preview_cols = ["_Doctor Name", "_Practice Name", "_Practice Address", "_City", "_Zip", "_Route Cluster", "_Priority Rank", "_Last Visit", "_Next Due", "_Due Status", "_Routable", "_Excluded Reason"]
+            preview_cols = ["_Doctor Name", "_Practice Name", "_Practice Address", "_City", "_Zip", "_Route Cluster", "_Route Guidance", "_Priority Rank", "_Last Visit", "_Next Due", "_Due Status", "_Routable", "_Excluded Reason"]
             st.dataframe(doctors[preview_cols].head(100), use_container_width=True)
 
         except Exception as e:
@@ -502,7 +710,7 @@ with tab_plan:
         locks = parse_locks(lock_text)
 
         if st.button("Generate full-month schedule", type="primary"):
-            schedule, due = generate_month(doctors, int(selected_year), int(selected_month), blocked_dates, locks, int(max_per_day))
+            schedule, due = generate_month(doctors, int(selected_year), int(selected_month), blocked_dates, locks, int(max_per_day), monday_office_day=monday_office_day)
             st.session_state["schedule"] = schedule
             st.session_state["due"] = due
 
@@ -525,8 +733,8 @@ with tab_plan:
 
                 export = export_excel(
                     edited,
-                    due[["_Doctor Name", "_Practice Name", "_Practice Address", "_City", "_Zip", "_Route Cluster", "_Priority Rank", "_Last Visit", "_Next Due", "_Due Status", "_Days Overdue", "_Notes"]],
-                    excluded[["_Doctor Name", "_Practice Name", "_Practice Address", "_City", "_Zip", "_Route Cluster", "_Excluded Reason", "_Notes"]],
+                    due[["_Doctor Name", "_Practice Name", "_Practice Address", "_City", "_Zip", "_Route Cluster", "_Route Guidance", "_Priority Rank", "_Last Visit", "_Next Due", "_Due Status", "_Days Overdue", "_Notes"]],
+                    excluded[["_Doctor Name", "_Practice Name", "_Practice Address", "_City", "_Zip", "_Route Cluster", "_Route Guidance", "_Excluded Reason", "_Notes"]],
                 )
                 file_name = f"territory_monthly_schedule_{selected_year}_{int(selected_month):02d}.xlsx"
                 st.download_button(
@@ -555,7 +763,13 @@ with tab_rules:
     st.subheader("Current rules in this app")
     st.json(RULES)
 
+    st.subheader("Route order")
+    st.json(ROUTE_ORDER)
+
     st.subheader("Route grouping keywords")
     st.json(ROUTE_KEYWORDS)
 
-    st.caption("These rules are code-based for this first version so they do not drift between uploads.")
+    st.subheader("ZIP route overrides")
+    st.json(ZIP_ROUTE_OVERRIDES)
+
+    st.caption("These rules are code-based so they do not drift between uploads.")
