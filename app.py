@@ -41,42 +41,246 @@ RULES = {
 ROUTE_KEYWORDS = {
     "Carlsbad": ["carlsbad"],
     "Oceanside / Vista": ["oceanside", "vista"],
-    "Encinitas North / Carlsbad Fill-in": ["north encinitas", "leucadia"],
-    "Encinitas South / Del Mar / Solana / RSF": ["south encinitas", "encinitas", "del mar", "solana beach", "rancho santa fe", "rsf"],
-    "San Marcos / Escondido": ["san marcos", "escondido"],
+    "Encinitas Split Review": ["north encinitas", "leucadia", "encinitas"],
+    "Del Mar / Solana / South Encinitas": ["south encinitas", "del mar", "carmel valley"],
+    "Solana Beach / Rancho Santa Fe / Fallbrook": ["solana beach", "rancho santa fe", "rsf", "fallbrook"],
+    "Escondido / San Marcos": ["san marcos", "escondido"],
     "Poway / Ramona": ["poway", "ramona"],
-    "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa": ["rancho bernardo", "4s", "carmel mountain", "mira mesa"],
-    "Kearny Mesa / Clairemont / Serra Mesa": ["kearny", "clairemont", "serra mesa"],
-    "La Mesa / Lemon Grove / Spring Valley": ["la mesa", "lemon grove", "spring valley"],
+    "CM / 4S / Scripps / RB": ["carmel mountain", "4s", "scripps", "rancho bernardo", "rb"],
+    "Mira Mesa": ["mira mesa"],
+    "Mission Valley / Kearny Mesa / Clairemont": ["mission valley", "kearny", "clairemont", "serra mesa"],
+    "UTC / La Jolla / Sorrento Valley": ["la jolla", "utc", "university city", "sorrento valley"],
+    "Downtown / Coronado / Hillcrest": ["downtown", "coronado", "hillcrest", "north park", "mission hills", "bankers hill", "92101"],
+    "Sports Arena / Point Loma / Bay Park": ["sports arena", "point loma", "bay park", "92110"],
+    "Chula Vista / National City": ["chula vista", "national city", "south bay"],
+    "Eastlake / Otay": ["eastlake", "otay"],
+    "Bonita / Rancho del Rey": ["bonita", "rancho del rey"],
     "El Cajon / Rancho San Diego": ["el cajon", "rancho san diego"],
+    "La Mesa / Lemon Grove / Spring Valley": ["la mesa", "lemon grove", "spring valley"],
     "Santee / Tierrasanta": ["santee", "tierrasanta"],
-    "Coronado / Downtown": ["coronado", "downtown", "92101"],
-    "Chula Vista / South Bay": ["chula vista", "national city", "bonita", "eastlake", "south bay"],
-    "La Jolla / UTC": ["la jolla", "utc", "university city"],
-    "Hillcrest / North Park / Central": ["hillcrest", "north park", "mission hills", "bankers hill"],
 }
 
-
 ROUTE_ORDER = [
-    "Carlsbad",
-    "Oceanside / Vista",
-    "Encinitas North / Carlsbad Fill-in",
-    "Encinitas South / Del Mar / Solana / RSF",
-    "San Marcos / Escondido",
-    "Poway / Ramona",
-    "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
-    "Kearny Mesa / Clairemont / Serra Mesa",
-    "La Jolla / UTC",
-    "Hillcrest / North Park / Central",
-    "Coronado / Downtown",
-    "Chula Vista / South Bay",
-    "El Cajon / Rancho San Diego",
-    "La Mesa / Lemon Grove / Spring Valley",
-    "Santee / Tierrasanta",
-    "Unassigned",
+    'Rancho Bernardo',
+    '4S',
+    'Carmel Mountain',
+    'Poway',
+    'Mira Mesa',
+    'Scripps Ranch',
+    'Point Loma',
+    'Ocean Beach',
+    'Pacific Beach',
+    'Sports Arena',
+    'Mission Valley',
+    'Linda Vista',
+    'Clairemont',
+    'Kearny Mesa',
+    'College Area',
+    'UTC',
+    'La Jolla',
+    'Sorrento Valley',
+    'Del Mar',
+    'Solana Beach',
+    'Rancho Santa Fe',
+    'Encinitas',
+    'Fallbrook',
+    'Carlsbad',
+    'Oceanside / Vista',
+    'Escondido / San Marcos',
+    'Santee',
+    'La Mesa',
+    'Lemon Grove',
+    'Spring Valley',
+    'Chula Vista / National City',
+    'Eastlake / Otay',
+    'Bonita / Rancho del Rey',
+    'El Cajon / Rancho San Diego',
+    'Downtown / Coronado / Hillcrest',
+    'Do Not Route',
+    'Needs Review',
+    'Out of Territory',
+    'Unassigned',
 ]
 
+ROUTE_ALIASES = {
+    'rancho bernardo / 4s / carmel mountain / mira mesa': 'CM / 4S / Scripps / RB',
+    'carmel mountain / 4s / scripps / rb': 'CM / 4S / Scripps / RB',
+    'cm / 4s / scripps / rb': 'CM / 4S / Scripps / RB',
+    'kearny mesa / clairemont / serra mesa': 'Mission Valley / Kearny Mesa / Clairemont',
+    'la jolla / utc': 'UTC / La Jolla / Sorrento Valley',
+    'coronado / downtown': 'Downtown / Coronado / Hillcrest',
+    'hillcrest / north park / central': 'Downtown / Coronado / Hillcrest',
+    'chula vista / south bay': 'Chula Vista / National City',
+    'san marcos / escondido': 'Escondido / San Marcos',
+    'encinitas south / del mar / solana / rsf': 'Del Mar / Solana / South Encinitas',
+    'rancho bernardo': 'Rancho Bernardo',
+    '4s': '4S',
+    'carmel mountain': 'Carmel Mountain',
+    'poway': 'Poway',
+    'mira mesa': 'Mira Mesa',
+    'scripps ranch': 'Scripps Ranch',
+    'point loma': 'Point Loma',
+    'ocean beach': 'Ocean Beach',
+    'pacific beach': 'Pacific Beach',
+    'sports arena': 'Sports Arena',
+    'mission valley': 'Mission Valley',
+    'linda vista': 'Linda Vista',
+    'clairemont': 'Clairemont',
+    'kearny mesa': 'Kearny Mesa',
+    'college area': 'College Area',
+    'utc': 'UTC',
+    'la jolla': 'La Jolla',
+    'sorrento valley': 'Sorrento Valley',
+    'del mar': 'Del Mar',
+    'solana beach': 'Solana Beach',
+    'rancho santa fe': 'Rancho Santa Fe',
+    'encinitas': 'Encinitas',
+    'fallbrook': 'Fallbrook',
+    'carlsbad': 'Carlsbad',
+    'oceanside / vista': 'Oceanside / Vista',
+    'escondido / san marcos': 'Escondido / San Marcos',
+    'santee': 'Santee',
+    'la mesa': 'La Mesa',
+    'lemon grove': 'Lemon Grove',
+    'spring valley': 'Spring Valley',
+    'chula vista / national city': 'Chula Vista / National City',
+    'eastlake / otay': 'Eastlake / Otay',
+    'bonita / rancho del rey': 'Bonita / Rancho del Rey',
+    'el cajon / rancho san diego': 'El Cajon / Rancho San Diego',
+    'downtown / coronado / hillcrest': 'Downtown / Coronado / Hillcrest',
+    'do not route': 'Do Not Route',
+    'needs review': 'Needs Review',
+    'out of territory': 'Out of Territory',
+    'unassigned': 'Unassigned',
+}
+
+DOCTOR_ROUTE_OVERRIDES = {
+    'Abbott, Christopher'.lower(): 'Santee',
+    'Albers, Harry'.lower(): 'UTC',
+    'Apostolides, John'.lower(): 'Point Loma',
+    'Austin, Scott'.lower(): 'Sports Arena',
+    'Bajpai, Abishek'.lower(): 'Mission Valley',
+    'Bende, Lori'.lower(): 'UTC',
+    'Berkowitz, Carla'.lower(): 'Sorrento Valley',
+    'Boeck, Carl'.lower(): 'Kearny Mesa',
+    'Camen, Jesse'.lower(): 'Mission Valley',
+    'Cao, Duyen'.lower(): 'Carlsbad',
+    'Cauchi, Caroline'.lower(): 'La Mesa',
+    'Chen, Edwin S'.lower(): 'College Area',
+    'Chen, Oliver'.lower(): 'Carlsbad',
+    'Cheng, Patty'.lower(): 'Rancho Bernardo',
+    'Chisholm, Karen'.lower(): 'Point Loma',
+    'Chung, Allen'.lower(): 'Mira Mesa',
+    'Coden, Daniel'.lower(): 'Do Not Route',
+    'Coleman, Brooke'.lower(): '4S',
+    'Cooper, Michael'.lower(): '4S',
+    'Cullins ( Monaco), Rosina'.lower(): 'College Area',
+    'Darrow, Irina'.lower(): 'Mission Valley',
+    'Dexter, Amanda'.lower(): 'Del Mar',
+    'Diaz, Yvette'.lower(): 'Santee',
+    'Dr. Denis Iwamoto'.lower(): 'Mira Mesa',
+    'Dr. Eli Ben-Moshe'.lower(): 'Ocean Beach',
+    'Dr. Shervin Alborzian'.lower(): 'UTC',
+    'Dr. Victoria Voung'.lower(): 'Santee',
+    'Dr. Viet Nguyen'.lower(): 'College Area',
+    'Eck, Thomas'.lower(): 'Sports Arena',
+    'Fitzpatrick, Michelle'.lower(): 'Carmel Mountain',
+    'Fleming, John C'.lower(): 'Spring Valley',
+    'Gentile, Matthew'.lower(): 'UTC',
+    'Giang, Steven'.lower(): 'Sports Arena',
+    'Goode, Korrin'.lower(): 'Rancho Bernardo',
+    'Grazian, Robert'.lower(): 'Santee',
+    'Guarneri, Erminia Mimi'.lower(): 'La Jolla',
+    'Hayes, Greg'.lower(): 'Rancho Bernardo',
+    'Hirmiz, Austin'.lower(): 'UTC',
+    'Homesley, Susan'.lower(): 'Poway',
+    'Hosn, Ryan'.lower(): 'La Mesa',
+    'Huang, Flora'.lower(): 'Lemon Grove',
+    'Huynh, Chi'.lower(): 'Mira Mesa',
+    'Kartsonis, Louis'.lower(): 'Pacific Beach',
+    'Kasanoff, David'.lower(): 'La Mesa',
+    'Kashak, Vanessa'.lower(): 'Carlsbad',
+    'Kavanagh, Cecilia'.lower(): 'Carlsbad',
+    'Kim, Joanne'.lower(): 'Clairemont',
+    'Kirk, Matthew'.lower(): 'Do Not Route',
+    'Kolodzey, Elizabeth'.lower(): 'Point Loma',
+    'Langford, Matthew'.lower(): 'Clairemont',
+    'Langford, Melanie'.lower(): 'Clairemont',
+    'Lee, Joyce'.lower(): 'Sports Arena',
+    'Lee, Nathan'.lower(): 'Clairemont',
+    'Li, Natalie'.lower(): '4S',
+    'Liu, Ying'.lower(): 'UTC',
+    'Luna, Fabian'.lower(): 'Mira Mesa',
+    'Luskin, Stephen'.lower(): 'Carlsbad',
+    'Ma, Shan'.lower(): 'Mira Mesa',
+    'Makor, Monvelea'.lower(): 'Santee',
+    'Mallari, Janel'.lower(): 'Del Mar',
+    'Marbun, Riolan'.lower(): 'Kearny Mesa',
+    'Markson, Anna'.lower(): 'UTC',
+    'Mashouf, Jay'.lower(): 'Poway',
+    'Master, Ramona'.lower(): 'UTC',
+    'Monck, Tammy'.lower(): 'Clairemont',
+    'Morgan, Hunter'.lower(): 'Carlsbad',
+    'Moss, Jason'.lower(): 'College Area',
+    'Nahl, Angela'.lower(): 'Do Not Route',
+    'Nakamura, Yuki'.lower(): 'Carlsbad',
+    'Nguyen, Theresa'.lower(): 'Spring Valley',
+    'Nguyen, Thu'.lower(): 'Mira Mesa',
+    'Niskanen, Rachel'.lower(): 'Carlsbad',
+    'Patel, Smit'.lower(): 'Santee',
+    'Perey, Dave'.lower(): 'La Mesa',
+    'Perry, Arthur'.lower(): 'Do Not Route',
+    'Peters, Jamie Starr'.lower(): 'La Mesa',
+    'Peterson-Salgado, Kristin'.lower(): 'Solana Beach',
+    'Ramolia, Anika'.lower(): 'Carlsbad',
+    'Ramos, Eric'.lower(): 'Fallbrook',
+    'Reeder, Kevin'.lower(): 'Carmel Mountain',
+    'Riggs, John'.lower(): 'Encinitas',
+    'Riggs, Kevin'.lower(): 'La Mesa',
+    'Ritchken, Simion'.lower(): 'Clairemont',
+    'Samuels, Marianna'.lower(): 'Poway',
+    'Sandler, Earl'.lower(): 'Carmel Mountain',
+    'Sandoc, Emily'.lower(): 'Mission Valley',
+    'Shapiro, Elliot'.lower(): 'UTC',
+    'Shulkin, Mitchell'.lower(): 'Rancho Bernardo',
+    'Solis, Kevin'.lower(): 'Kearny Mesa',
+    'Starkey, Elesha'.lower(): 'Carmel Mountain',
+    'Sung, Ann'.lower(): 'Poway',
+    'Tang, Ashley'.lower(): 'Sports Arena',
+    'Tavakoli, Melody'.lower(): 'Pacific Beach',
+    'Tayman, Steven'.lower(): 'UTC',
+    'Thai, Amanda'.lower(): 'Kearny Mesa',
+    'Thiem, Christine'.lower(): 'Sports Arena',
+    'Tran, Linda'.lower(): '4S',
+    'Tran, Michael'.lower(): 'Poway',
+    'Trang, Chau'.lower(): 'Linda Vista',
+    'Tu, Jason'.lower(): 'Carmel Mountain',
+    'Val, Isabel'.lower(): 'Clairemont',
+    'Van Der Linde, Harrison'.lower(): 'Ocean Beach',
+    'Van Hoose, Marc'.lower(): 'Kearny Mesa',
+    'Varghese, Ashley'.lower(): 'Do Not Route',
+    'Wan, Keith'.lower(): 'Poway',
+    'Wang, Dorothy'.lower(): 'Carmel Mountain',
+    'Wang, Howard'.lower(): 'Carlsbad',
+    'Weiss, Lisa'.lower(): 'Rancho Santa Fe',
+    'Wesling, Paul'.lower(): 'Lemon Grove',
+    'White, Eric'.lower(): 'Kearny Mesa',
+    'White, Renee'.lower(): 'Sorrento Valley',
+    'Willey, Melissa'.lower(): 'Carlsbad',
+    'Wong, Gordon'.lower(): 'La Jolla',
+    'Wynnshang, Sun'.lower(): 'UTC',
+    'Yang, Diane'.lower(): 'Poway',
+    'Yeghiazarian, Mark'.lower(): 'La Mesa',
+    'Zarkhina, Darya'.lower(): 'Mission Valley',
+}
+
 ROUTE_SEQUENCE = {route: i for i, route in enumerate(ROUTE_ORDER)}
+
+def normalize_route_name(route):
+    val = str(route).strip()
+    if not val or val.lower() in ["nan", "none"]:
+        return "Unassigned"
+    return ROUTE_ALIASES.get(val.lower(), val)
 
 ZIP_ROUTE_OVERRIDES = {
     "92008": "Carlsbad",
@@ -90,42 +294,47 @@ ZIP_ROUTE_OVERRIDES = {
     "92081": "Oceanside / Vista",
     "92083": "Oceanside / Vista",
     "92084": "Oceanside / Vista",
-    "92024": "Encinitas South / Del Mar / Solana / RSF",
-    "92075": "Encinitas South / Del Mar / Solana / RSF",
-    "92091": "Encinitas South / Del Mar / Solana / RSF",
-    "92067": "Encinitas South / Del Mar / Solana / RSF",
-    "92069": "San Marcos / Escondido",
-    "92078": "San Marcos / Escondido",
-    "92025": "San Marcos / Escondido",
-    "92026": "San Marcos / Escondido",
-    "92027": "San Marcos / Escondido",
-    "92029": "San Marcos / Escondido",
+    "92024": "Encinitas Split Review",
+    "92130": "Del Mar / Solana / South Encinitas",
+    "92075": "Solana Beach / Rancho Santa Fe / Fallbrook",
+    "92091": "Solana Beach / Rancho Santa Fe / Fallbrook",
+    "92067": "Solana Beach / Rancho Santa Fe / Fallbrook",
+    "92028": "Solana Beach / Rancho Santa Fe / Fallbrook",
+    "92069": "Escondido / San Marcos",
+    "92078": "Escondido / San Marcos",
+    "92025": "Escondido / San Marcos",
+    "92026": "Escondido / San Marcos",
+    "92027": "Escondido / San Marcos",
+    "92029": "Escondido / San Marcos",
     "92064": "Poway / Ramona",
     "92065": "Poway / Ramona",
-    "92127": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
-    "92128": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
-    "92129": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
-    "92126": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
-    "92123": "Kearny Mesa / Clairemont / Serra Mesa",
-    "92111": "Kearny Mesa / Clairemont / Serra Mesa",
-    "92117": "Kearny Mesa / Clairemont / Serra Mesa",
-    "92110": "Kearny Mesa / Clairemont / Serra Mesa",
-    "92109": "Kearny Mesa / Clairemont / Serra Mesa",
-    "92122": "La Jolla / UTC",
-    "92037": "La Jolla / UTC",
-    "92093": "La Jolla / UTC",
-    "92103": "Hillcrest / North Park / Central",
-    "92104": "Hillcrest / North Park / Central",
-    "92116": "Hillcrest / North Park / Central",
-    "92101": "Coronado / Downtown",
-    "92118": "Coronado / Downtown",
-    "91910": "Chula Vista / South Bay",
-    "91911": "Chula Vista / South Bay",
-    "91913": "Chula Vista / South Bay",
-    "91914": "Chula Vista / South Bay",
-    "91915": "Chula Vista / South Bay",
-    "91902": "Chula Vista / South Bay",
-    "91950": "Chula Vista / South Bay",
+    "92127": "CM / 4S / Scripps / RB",
+    "92128": "CM / 4S / Scripps / RB",
+    "92129": "CM / 4S / Scripps / RB",
+    "92131": "CM / 4S / Scripps / RB",
+    "92126": "Mira Mesa",
+    "92123": "Mission Valley / Kearny Mesa / Clairemont",
+    "92111": "Mission Valley / Kearny Mesa / Clairemont",
+    "92117": "Mission Valley / Kearny Mesa / Clairemont",
+    "92108": "Mission Valley / Kearny Mesa / Clairemont",
+    "92122": "UTC / La Jolla / Sorrento Valley",
+    "92037": "UTC / La Jolla / Sorrento Valley",
+    "92093": "UTC / La Jolla / Sorrento Valley",
+    "92121": "UTC / La Jolla / Sorrento Valley",
+    "92103": "Downtown / Coronado / Hillcrest",
+    "92104": "Downtown / Coronado / Hillcrest",
+    "92116": "Downtown / Coronado / Hillcrest",
+    "92101": "Downtown / Coronado / Hillcrest",
+    "92118": "Downtown / Coronado / Hillcrest",
+    "92110": "Sports Arena / Point Loma / Bay Park",
+    "92106": "Sports Arena / Point Loma / Bay Park",
+    "91910": "Chula Vista / National City",
+    "91911": "Chula Vista / National City",
+    "91950": "Chula Vista / National City",
+    "91913": "Eastlake / Otay",
+    "91914": "Eastlake / Otay",
+    "91915": "Eastlake / Otay",
+    "91902": "Bonita / Rancho del Rey",
     "92020": "El Cajon / Rancho San Diego",
     "92019": "El Cajon / Rancho San Diego",
     "91941": "La Mesa / Lemon Grove / Spring Valley",
@@ -140,25 +349,38 @@ CITY_ROUTE_OVERRIDES = {
     "carlsbad": "Carlsbad",
     "oceanside": "Oceanside / Vista",
     "vista": "Oceanside / Vista",
-    "del mar": "Encinitas South / Del Mar / Solana / RSF",
-    "solana beach": "Encinitas South / Del Mar / Solana / RSF",
-    "rancho santa fe": "Encinitas South / Del Mar / Solana / RSF",
-    "san marcos": "San Marcos / Escondido",
-    "escondido": "San Marcos / Escondido",
+    "encinitas": "Encinitas Split Review",
+    "del mar": "Del Mar / Solana / South Encinitas",
+    "solana beach": "Solana Beach / Rancho Santa Fe / Fallbrook",
+    "rancho santa fe": "Solana Beach / Rancho Santa Fe / Fallbrook",
+    "fallbrook": "Solana Beach / Rancho Santa Fe / Fallbrook",
+    "san marcos": "Escondido / San Marcos",
+    "escondido": "Escondido / San Marcos",
     "poway": "Poway / Ramona",
     "ramona": "Poway / Ramona",
-    "rancho bernardo": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
-    "mira mesa": "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa",
-    "la jolla": "La Jolla / UTC",
-    "university city": "La Jolla / UTC",
-    "utc": "La Jolla / UTC",
-    "hillcrest": "Hillcrest / North Park / Central",
-    "north park": "Hillcrest / North Park / Central",
-    "downtown": "Coronado / Downtown",
-    "coronado": "Coronado / Downtown",
-    "chula vista": "Chula Vista / South Bay",
-    "national city": "Chula Vista / South Bay",
-    "bonita": "Chula Vista / South Bay",
+    "rancho bernardo": "CM / 4S / Scripps / RB",
+    "scripps ranch": "CM / 4S / Scripps / RB",
+    "mira mesa": "Mira Mesa",
+    "la jolla": "UTC / La Jolla / Sorrento Valley",
+    "university city": "UTC / La Jolla / Sorrento Valley",
+    "utc": "UTC / La Jolla / Sorrento Valley",
+    "sorrento valley": "UTC / La Jolla / Sorrento Valley",
+    "mission valley": "Mission Valley / Kearny Mesa / Clairemont",
+    "kearny mesa": "Mission Valley / Kearny Mesa / Clairemont",
+    "clairemont": "Mission Valley / Kearny Mesa / Clairemont",
+    "sports arena": "Sports Arena / Point Loma / Bay Park",
+    "point loma": "Sports Arena / Point Loma / Bay Park",
+    "bay park": "Sports Arena / Point Loma / Bay Park",
+    "hillcrest": "Downtown / Coronado / Hillcrest",
+    "north park": "Downtown / Coronado / Hillcrest",
+    "downtown": "Downtown / Coronado / Hillcrest",
+    "coronado": "Downtown / Coronado / Hillcrest",
+    "chula vista": "Chula Vista / National City",
+    "national city": "Chula Vista / National City",
+    "eastlake": "Eastlake / Otay",
+    "otay": "Eastlake / Otay",
+    "bonita": "Bonita / Rancho del Rey",
+    "rancho del rey": "Bonita / Rancho del Rey",
     "el cajon": "El Cajon / Rancho San Diego",
     "rancho san diego": "El Cajon / Rancho San Diego",
     "la mesa": "La Mesa / Lemon Grove / Spring Valley",
@@ -281,7 +503,7 @@ def infer_route(row, route_col, address_col, city_col, zip_col):
     if route_col and pd.notna(row.get(route_col)) and str(row.get(route_col)).strip():
         val = str(row.get(route_col)).strip()
         if val.lower() not in ["nan", "none", "unassigned"]:
-            return val
+            return normalize_route_name(val)
 
     zip_value = clean_zip(row.get(zip_col)) if zip_col else ""
     if zip_value in ZIP_ROUTE_OVERRIDES:
@@ -299,27 +521,35 @@ def infer_route(row, route_col, address_col, city_col, zip_col):
     return "Unassigned"
 
 def route_sort_value(route):
-    return ROUTE_SEQUENCE.get(str(route), 999)
+    return ROUTE_SEQUENCE.get(normalize_route_name(route), 999)
 
 def route_direction_label(route):
+    route = normalize_route_name(route)
     directions = {
-        "Carlsbad": "North County coastal. Keep separate from Oceanside/Vista unless needed.",
-        "Oceanside / Vista": "North County inland/coastal. Do not mix with Carlsbad by default.",
-        "Encinitas North / Carlsbad Fill-in": "Use as Carlsbad fill-in when needed.",
-        "Encinitas South / Del Mar / Solana / RSF": "South Encinitas, Del Mar, Solana Beach, Rancho Santa Fe.",
-        "San Marcos / Escondido": "North inland route.",
-        "Poway / Ramona": "Poway route; Ramona quarterly and never grouped with Pod 4.",
-        "Rancho Bernardo / 4S / Carmel Mountain / Mira Mesa": "Fill-in route between 4S, Poway, Carmel Mountain, and Mira Mesa.",
-        "Kearny Mesa / Clairemont / Serra Mesa": "Central cluster with many offices; good filler route from North Park.",
-        "La Jolla / UTC": "Office/UTC route.",
-        "Hillcrest / North Park / Central": "Closest-to-home central route.",
-        "Coronado / Downtown": "Downtown/Coronado route.",
-        "Chula Vista / South Bay": "South Bay route.",
+        "Carlsbad": "Carlsbad route. Keep separate from Oceanside/Vista unless intentionally filling a day.",
+        "Oceanside / Vista": "Oceanside and Vista route. Do not mix with Carlsbad by default.",
+        "Encinitas Split Review": "Encinitas needs review; split north/south when possible.",
+        "Del Mar / Solana / South Encinitas": "Del Mar, Solana, and South Encinitas route.",
+        "Solana Beach / Rancho Santa Fe / Fallbrook": "Solana Beach, Rancho Santa Fe, and Fallbrook route.",
+        "Escondido / San Marcos": "North inland route for Escondido and San Marcos.",
+        "Poway / Ramona": "Poway route; Ramona is quarterly and should stay with Poway.",
+        "CM / 4S / Scripps / RB": "Carmel Mountain, 4S, Scripps Ranch, Rancho Bernardo route.",
+        "Mira Mesa": "Mira Mesa route; good fill-in with nearby central/north routes when needed.",
+        "Mission Valley / Kearny Mesa / Clairemont": "Central route with Mission Valley, Kearny Mesa, and Clairemont.",
+        "UTC / La Jolla / Sorrento Valley": "UTC, La Jolla, and Sorrento Valley route.",
+        "Sports Arena / Point Loma / Bay Park": "Sports Arena, Point Loma, Bay Park route.",
+        "Downtown / Coronado / Hillcrest": "Central/Downtown route including Coronado and Hillcrest.",
+        "Chula Vista / National City": "South Bay route for Chula Vista and National City.",
+        "Eastlake / Otay": "Eastlake and Otay route.",
+        "Bonita / Rancho del Rey": "Bonita and Rancho del Rey route.",
         "El Cajon / Rancho San Diego": "East County route; pairs El Cajon with Rancho San Diego.",
-        "La Mesa / Lemon Grove / Spring Valley": "East/Central route; do not mix with Santee by default.",
+        "La Mesa / Lemon Grove / Spring Valley": "La Mesa, Lemon Grove, and Spring Valley route.",
         "Santee / Tierrasanta": "Santee pairs with Tierrasanta.",
+        "Needs Review": "Needs review before routing.",
+        "Out of Territory": "Out of territory; should not be scheduled.",
+        "Unassigned": "Needs route assignment before routing.",
     }
-    return directions.get(str(route), "Needs review; app could not confidently assign a route cluster.")
+    return directions.get(route, "Needs review; app could not confidently assign a route cluster.")
 
 def score_from_referrals(row, cols):
     total = 0
@@ -353,6 +583,7 @@ def prepare_data(sheets):
     ref2026_col = find_col(doctors, ["2026 referrals", "2026 Referrals", "2026", "YTD Referrals", "Current Year Referrals"])
     ref2025_col = find_col(doctors, ["2025 referrals", "2025 Referrals", "2025", "Prior Year Referrals"])
     routable_col = find_col(doctors, ["Routable", "Routable?", "Visit", "Visit?", "Active"])
+    correct_route_col = find_col(doctors, ["Correct Route Group", "Correct Route", "Misty Route Group", "Working Route Group"])
 
     if not name_col:
         raise ValueError("Could not find the doctor/provider name column.")
@@ -371,7 +602,18 @@ def prepare_data(sheets):
         out["_Referral Score"] = out.apply(lambda r: score_from_referrals(r, [ref2026_col, ref2025_col]), axis=1)
         out["_Priority Rank"] = out["_Referral Score"].rank(method="first", ascending=False).astype(int)
 
-    out["_Route Cluster"] = out.apply(lambda r: infer_route(r, route_col, address_col, city_col, zip_col), axis=1)
+    out["_Route Cluster"] = out.apply(lambda r: normalize_route_name(infer_route(r, route_col, address_col, city_col, zip_col)), axis=1)
+
+    # User-taught routing: prefer Misty's working route group when present,
+    # otherwise use doctor-specific route rules learned from the July schedule corrections.
+    if correct_route_col:
+        mask = out[correct_route_col].notna() & out[correct_route_col].astype(str).str.strip().ne("")
+        out.loc[mask, "_Route Cluster"] = out.loc[mask, correct_route_col].astype(str).str.strip().apply(normalize_route_name)
+
+    out["_Doctor Key"] = out["_Doctor Name"].astype(str).str.strip().str.lower()
+    override_mask = out["_Doctor Key"].isin(DOCTOR_ROUTE_OVERRIDES)
+    out.loc[override_mask, "_Route Cluster"] = out.loc[override_mask, "_Doctor Key"].map(DOCTOR_ROUTE_OVERRIDES)
+
     out["_Route Sort"] = out["_Route Cluster"].apply(route_sort_value)
     out["_Route Guidance"] = out["_Route Cluster"].apply(route_direction_label)
 
@@ -391,6 +633,7 @@ def prepare_data(sheets):
 
     all_text = out.apply(row_text, axis=1)
     out["_Excluded Reason"] = ""
+    out.loc[out["_Route Cluster"].astype(str).str.lower().eq("do not route"), "_Excluded Reason"] = "Misty route group: Do Not Route"
     for kw in RULES["excluded_keywords"]:
         mask = all_text.str.contains(re.escape(kw), na=False)
         out.loc[mask & (out["_Excluded Reason"] == ""), "_Excluded Reason"] = kw
@@ -481,6 +724,7 @@ def office_day_row(visit_date):
 def schedule_row(row, visit_date, note=""):
     last_visit = row["_Last Visit"]
     next_due = row["_Next Due"]
+    route_cluster = normalize_route_name(row["_Route Cluster"])
     return {
         "Date": visit_date,
         "Day": visit_date.strftime("%A"),
@@ -490,9 +734,9 @@ def schedule_row(row, visit_date, note=""):
         "Practice Address": row["_Practice Address"],
         "City": row["_City"],
         "Zip": row["_Zip"],
-        "Route Cluster": row["_Route Cluster"],
-        "Route Sort": int(row["_Route Sort"]) if pd.notna(row["_Route Sort"]) else 999,
-        "Route Guidance": row.get("_Route Guidance", route_direction_label(row["_Route Cluster"])),
+        "Route Cluster": route_cluster,
+        "Route Sort": route_sort_value(route_cluster),
+        "Route Guidance": route_direction_label(route_cluster),
         "Priority Rank": int(row["_Priority Rank"]) if pd.notna(row["_Priority Rank"]) else "",
         "Last Visit": last_visit.date() if pd.notna(last_visit) else "",
         "Next Due": next_due.date() if pd.notna(next_due) else "",
@@ -504,6 +748,8 @@ def schedule_row(row, visit_date, note=""):
 
 def generate_month(doctors, year, month, blocked_dates, locks, max_per_day, monday_office_day=True, target_per_day=None):
     target_per_day = target_per_day or RULES["target_offices_per_day"]
+    min_per_day = RULES["min_offices_per_day"]
+
     due = doctors[
         doctors["_Routable"] &
         doctors["_Due Status"].isin(["Overdue", "Due Soon", "No Visit History"])
@@ -511,8 +757,8 @@ def generate_month(doctors, year, month, blocked_dates, locks, max_per_day, mond
 
     due["_Sort Overdue"] = pd.to_numeric(due.get("_Days Overdue", 0), errors="coerce").fillna(-9999)
     due = due.sort_values(
-        ["_Priority Rank", "_Sort Overdue", "_Route Sort", "_Doctor Name"],
-        ascending=[True, False, True, True]
+        ["_Route Sort", "_Priority Rank", "_Sort Overdue", "_Doctor Name"],
+        ascending=[True, True, False, True]
     )
 
     rows = []
@@ -542,40 +788,43 @@ def generate_month(doctors, year, month, blocked_dates, locks, max_per_day, mond
         if r["Doctor Name"] != "OFFICE DAY":
             locked_counts[r["Date"]] = locked_counts.get(r["Date"], 0) + 1
 
-    day_idx = 0
-    previous_route = None
-
-    # Route pods are scheduled in geography order. Within each pod, highest-priority doctors go first.
-    for route, group in remaining.groupby("_Route Cluster", sort=False):
-        group = group.sort_values(["_Priority Rank", "_Sort Overdue", "_Doctor Name"], ascending=[True, False, True])
-        doctors_in_route = list(group.iterrows())
-        cursor = 0
-
-        while cursor < len(doctors_in_route) and day_idx < len(field_days):
-            # Move forward if the current day is already full from locks.
-            while day_idx < len(field_days) and locked_counts.get(field_days[day_idx], 0) >= max_per_day:
-                day_idx += 1
-            if day_idx >= len(field_days):
-                break
-
-            dt = field_days[day_idx]
-            available = max_per_day - locked_counts.get(dt, 0)
-            take = min(len(doctors_in_route) - cursor, min(available, target_per_day))
-            if take <= 0:
-                day_idx += 1
-                continue
-
-            note = "Smart grouped by route/priority"
-            if previous_route == route:
-                note = "Same route continued because more offices were due"
-            for _, rr in doctors_in_route[cursor:cursor + take]:
-                rows.append(schedule_row(rr, dt, note))
-            cursor += take
-            previous_route = route
-            day_idx += 1
-
-        if day_idx >= len(field_days):
+    # Fill each field day to a usable count. Stay in the same route pod when possible,
+    # but do not leave a day with only 1-2 stops when other due doctors are available.
+    for dt in field_days:
+        if remaining.empty:
             break
+
+        already_on_day = locked_counts.get(dt, 0)
+        available = max_per_day - already_on_day
+        if available <= 0:
+            continue
+
+        target_for_day = min(target_per_day, available)
+        if len(remaining) <= target_for_day:
+            take_indexes = list(remaining.index)
+        else:
+            primary_route = remaining.iloc[0]["_Route Cluster"]
+            same_route = list(remaining[remaining["_Route Cluster"] == primary_route].index[:target_for_day])
+            take_indexes = same_route
+
+            # If a pod only has a few due offices, top off the day with the next best nearby/priority offices.
+            desired_min = min(min_per_day, target_for_day, len(remaining))
+            if len(take_indexes) < desired_min:
+                for idx in remaining.index:
+                    if idx not in take_indexes:
+                        take_indexes.append(idx)
+                    if len(take_indexes) >= target_for_day:
+                        break
+
+        day_rows = remaining.loc[take_indexes]
+        route_count = day_rows["_Route Cluster"].nunique()
+        note = "Smart grouped by route/priority" if route_count == 1 else "Route topped off to avoid a light day"
+
+        for _, rr in day_rows.iterrows():
+            rows.append(schedule_row(rr, dt, note))
+            scheduled_names.add(rr["_Doctor Name"])
+
+        remaining = remaining.drop(index=take_indexes, errors="ignore")
 
     schedule = pd.DataFrame(rows)
     if not schedule.empty:
@@ -724,8 +973,7 @@ with tab_plan:
             else:
                 st.subheader("Editable monthly schedule")
                 st.caption("Make changes here before exporting. The exported Excel has blank columns for visit completion and updated notes.")
-                edited = st.data_editor(schedule, use_container_width=True, num_rows="dynamic", key="edited_schedule")
-                
+                edited = st.data_editor(schedule, use_container_width=True, num_rows="dynamic", key="schedule_editor")
 
                 st.subheader("Daily counts")
                 counts = edited.groupby(["Date", "Day"]).size().reset_index(name="Office Count")
@@ -771,5 +1019,8 @@ with tab_rules:
 
     st.subheader("ZIP route overrides")
     st.json(ZIP_ROUTE_OVERRIDES)
+
+    st.subheader("Doctor-specific route overrides")
+    st.json(DOCTOR_ROUTE_OVERRIDES)
 
     st.caption("These rules are code-based so they do not drift between uploads.")
