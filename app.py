@@ -725,7 +725,7 @@ with tab_plan:
                 st.subheader("Editable monthly schedule")
                 st.caption("Make changes here before exporting. The exported Excel has blank columns for visit completion and updated notes.")
                 edited = st.data_editor(schedule, use_container_width=True, num_rows="dynamic", key="edited_schedule")
-                st.session_state["edited_schedule"] = edited
+                
 
                 st.subheader("Daily counts")
                 counts = edited.groupby(["Date", "Day"]).size().reset_index(name="Office Count")
