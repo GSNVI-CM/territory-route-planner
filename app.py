@@ -943,6 +943,16 @@ def workdays_for_range(start_date, end_date, blocked_dates):
         current += timedelta(days=1)
     return days
 
+def first_nonempty(series, default=""):
+    try:
+        cleaned = series.dropna().astype(str).str.strip()
+        cleaned = cleaned[cleaned.ne("") & cleaned.str.lower().ne("nan")]
+        if len(cleaned):
+            return cleaned.iloc[0]
+    except Exception:
+        pass
+    return default
+
 def build_offices(doctors, range_start, range_end):
     d = doctors[doctors["_Routable"]].copy()
     if d.empty:
@@ -966,7 +976,7 @@ def build_offices(doctors, range_start, range_end):
 
     for _, g in d.groupby("_Office Key", dropna=False):
         g = g.copy()
-        route = normalize_route_name(g["_Route Cluster"].dropna().astype(str).iloc[0]) if len(g) else "Unassigned"
+        route = normalize_route_name(first_nonempty(g["_Route Cluster"], "Unassigned")) if len(g) else "Unassigned"
         last_visits = pd.to_datetime(g["_Last Visit"], errors="coerce")
         next_dues = pd.to_datetime(g["_Next Due"], errors="coerce")
 
@@ -995,10 +1005,10 @@ def build_offices(doctors, range_start, range_end):
 
         rows.append({
             "_Office Key": g["_Office Key"].iloc[0],
-            "Practice Name": g["_Practice Name"].dropna().astype(str).iloc[0],
-            "Practice Address": g["_Practice Address"].dropna().astype(str).iloc[0],
-            "City": g["_City"].dropna().astype(str).iloc[0],
-            "Zip": g["_Zip"].dropna().astype(str).iloc[0],
+            "Practice Name": first_nonempty(g["_Practice Name"], "Unnamed Office"),
+            "Practice Address": first_nonempty(g["_Practice Address"], ""),
+            "City": first_nonempty(g["_City"], ""),
+            "Zip": first_nonempty(g["_Zip"], ""),
             "Doctors": ", ".join(sorted(g["_Doctor Name"].dropna().astype(str).unique())),
             "Doctor Count": int(g["_Doctor Name"].nunique()),
             "Route Cluster": route,
