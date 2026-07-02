@@ -526,6 +526,33 @@ def route_sort_value(route):
 def route_direction_label(route):
     route = normalize_route_name(route)
     directions = {
+        "Rancho Bernardo": "Rancho Bernardo working route.",
+        "4S": "4S working route.",
+        "Carmel Mountain": "Carmel Mountain working route.",
+        "Poway": "Poway working route.",
+        "Mira Mesa": "Mira Mesa working route.",
+        "Scripps Ranch": "Scripps Ranch working route.",
+        "Point Loma": "Point Loma working route.",
+        "Ocean Beach": "Ocean Beach working route.",
+        "Pacific Beach": "Pacific Beach working route.",
+        "Sports Arena": "Sports Arena working route.",
+        "Mission Valley": "Mission Valley working route.",
+        "Linda Vista": "Linda Vista working route.",
+        "Clairemont": "Clairemont working route.",
+        "Kearny Mesa": "Kearny Mesa working route.",
+        "College Area": "College Area working route.",
+        "UTC": "UTC working route.",
+        "La Jolla": "La Jolla working route.",
+        "Sorrento Valley": "Sorrento Valley working route.",
+        "Del Mar": "Del Mar working route.",
+        "Solana Beach": "Solana Beach working route.",
+        "Rancho Santa Fe": "Rancho Santa Fe working route.",
+        "Encinitas": "Encinitas working route.",
+        "Fallbrook": "Fallbrook working route.",
+        "Santee": "Santee working route.",
+        "La Mesa": "La Mesa working route.",
+        "Lemon Grove": "Lemon Grove working route.",
+        "Spring Valley": "Spring Valley working route.",
         "Carlsbad": "Carlsbad route. Keep separate from Oceanside/Vista unless intentionally filling a day.",
         "Oceanside / Vista": "Oceanside and Vista route. Do not mix with Carlsbad by default.",
         "Encinitas Split Review": "Encinitas needs review; split north/south when possible.",
@@ -953,10 +980,27 @@ def first_nonempty(series, default=""):
         pass
     return default
 
-def build_offices(doctors, range_start, range_end):
+def build_offices(doctors, range_start, range_end, locks=None):
     d = doctors[doctors["_Routable"]].copy()
     if d.empty:
         return pd.DataFrame()
+
+    locks = locks or {}
+    start_dt = pd.to_datetime(range_start).date()
+    end_dt = pd.to_datetime(range_end).date()
+
+    # If a doctor/office is locked to a future date outside this selected range,
+    # remove that whole office from this range so it cannot be scheduled early.
+    # If the locked date is inside the selected range, the scheduler will place
+    # that office on the locked date first and then remove it from the regular pool.
+    def locked_date_for_group(group):
+        names = " | ".join(group.get("_Doctor Name", pd.Series(dtype=str)).dropna().astype(str).str.lower().tolist())
+        practice = " | ".join(group.get("_Practice Name", pd.Series(dtype=str)).dropna().astype(str).str.lower().tolist())
+        combined = names + " | " + practice
+        for key, lock_date in locks.items():
+            if key and key.lower() in combined:
+                return lock_date
+        return None
 
     for col in ["_Practice Name", "_Practice Address", "_City", "_Zip", "_Route Cluster"]:
         if col not in d.columns:
@@ -976,6 +1020,10 @@ def build_offices(doctors, range_start, range_end):
 
     for _, g in d.groupby("_Office Key", dropna=False):
         g = g.copy()
+        locked_date = locked_date_for_group(g)
+        if locked_date is not None and not (start_dt <= locked_date <= end_dt):
+            # Save it for the locked date later; do not schedule it early.
+            continue
         route = normalize_route_name(first_nonempty(g["_Route Cluster"], "Unassigned")) if len(g) else "Unassigned"
         last_visits = pd.to_datetime(g["_Last Visit"], errors="coerce")
         next_dues = pd.to_datetime(g["_Next Due"], errors="coerce")
@@ -1018,6 +1066,7 @@ def build_offices(doctors, range_start, range_end):
             "Last Office Visit": last_office_visit.date() if pd.notna(last_office_visit) else "",
             "Next Office Due": next_office_due.date() if pd.notna(next_office_due) else "",
             "Due Status": due_status,
+            "Locked Date": locked_date if locked_date is not None else "",
             "_Days Overdue": days_overdue,
         })
 
@@ -1065,11 +1114,11 @@ def assign_office_stop_order(day_df):
     ordered["Stop #"] = range(1, len(ordered) + 1)
     return ordered.drop(columns=["_Local Sort"], errors="ignore")
 
-def generate_date_range_offices(doctors, start_date, end_date, blocked_dates, max_per_day, target_per_day=7, day_route_preferences=None, day_max_overrides=None):
+def generate_date_range_offices(doctors, start_date, end_date, blocked_dates, max_per_day, target_per_day=7, day_route_preferences=None, day_max_overrides=None, locks=None):
     day_route_preferences = day_route_preferences or {}
     day_max_overrides = day_max_overrides or {}
 
-    offices = build_offices(doctors, start_date, end_date)
+    offices = build_offices(doctors, start_date, end_date, locks=locks)
     rows = []
     if offices.empty:
         return pd.DataFrame(), offices
@@ -1077,12 +1126,23 @@ def generate_date_range_offices(doctors, start_date, end_date, blocked_dates, ma
     remaining = offices.copy()
     days = workdays_for_range(start_date, end_date, blocked_dates)
 
+    # Place locked offices first on their exact locked date.
+    if "Locked Date" in remaining.columns:
+        locked_mask = remaining["Locked Date"].astype(str).str.strip().ne("")
+        locked_rows = remaining[locked_mask].copy()
+        for _, r in locked_rows.iterrows():
+            lock_dt = pd.to_datetime(r["Locked Date"]).date()
+            if lock_dt in days:
+                rows.append(office_schedule_row(r, lock_dt, "Locked by user / calendar event"))
+        remaining = remaining[~locked_mask].copy()
+
     for dt in days:
         if remaining.empty:
             break
 
+        already_scheduled = sum(1 for r in rows if r.get("Date") == dt)
         day_limit = min(int(max_per_day), int(day_max_overrides.get(dt, target_per_day)))
-        target = min(int(target_per_day), day_limit, len(remaining))
+        target = min(int(target_per_day), max(day_limit - already_scheduled, 0), len(remaining))
         if target <= 0:
             continue
 
@@ -1282,6 +1342,7 @@ with tab_plan:
     else:
         doctors = st.session_state["doctors"]
         blocked_dates = parse_dates(blocked_text)
+        locks = parse_locks(lock_text)
         day_route_preferences = parse_route_preferences(preferred_routes_text)
         day_max_overrides = parse_day_limits(day_limits_text)
 
@@ -1301,6 +1362,7 @@ with tab_plan:
                 target_per_day=7,
                 day_route_preferences=day_route_preferences,
                 day_max_overrides=day_max_overrides,
+                locks=locks,
             )
             st.session_state["schedule"] = schedule
             st.session_state["due_offices"] = offices
