@@ -929,7 +929,209 @@ def generate_month(doctors, year, month, blocked_dates, locks, max_per_day, mond
         schedule["_Stop Sort"] = pd.to_numeric(schedule["Stop #"], errors="coerce").fillna(0)
         schedule = schedule.sort_values(["Date", "_Stop Sort", "Route Sort", "Priority Rank", "Doctor Name"], na_position="last").drop(columns=["_Stop Sort"]).reset_index(drop=True)
 
+
     return schedule, due
+
+def workdays_for_range(start_date, end_date, blocked_dates):
+    days = []
+    start_date = pd.to_datetime(start_date).date()
+    end_date = pd.to_datetime(end_date).date()
+    current = start_date
+    while current <= end_date:
+        if current.weekday() < 5 and current not in blocked_dates:
+            days.append(current)
+        current += timedelta(days=1)
+    return days
+
+def build_offices(doctors, range_start, range_end):
+    d = doctors[doctors["_Routable"]].copy()
+    if d.empty:
+        return pd.DataFrame()
+
+    for col in ["_Practice Name", "_Practice Address", "_City", "_Zip", "_Route Cluster"]:
+        if col not in d.columns:
+            d[col] = ""
+
+    d["_Office Key"] = (
+        d["_Practice Name"].fillna("").astype(str).str.strip().str.lower() + "|" +
+        d["_Practice Address"].fillna("").astype(str).str.strip().str.lower() + "|" +
+        d["_City"].fillna("").astype(str).str.strip().str.lower() + "|" +
+        d["_Zip"].fillna("").astype(str).str.strip().str.lower()
+    )
+
+    rows = []
+    start_ts = pd.Timestamp(range_start)
+    end_ts = pd.Timestamp(range_end)
+    pull_ahead_end = end_ts + pd.Timedelta(days=21)
+
+    for _, g in d.groupby("_Office Key", dropna=False):
+        g = g.copy()
+        route = normalize_route_name(g["_Route Cluster"].dropna().astype(str).iloc[0]) if len(g) else "Unassigned"
+        last_visits = pd.to_datetime(g["_Last Visit"], errors="coerce")
+        next_dues = pd.to_datetime(g["_Next Due"], errors="coerce")
+
+        last_office_visit = last_visits.max()
+        next_office_due = next_dues.min()
+
+        if pd.isna(next_office_due):
+            due_status = "No Visit History"
+        elif next_office_due < start_ts:
+            due_status = "Overdue"
+        elif next_office_due <= end_ts:
+            due_status = "Due During Range"
+        elif next_office_due <= pull_ahead_end and (pd.isna(last_office_visit) or last_office_visit <= start_ts - pd.Timedelta(days=28)):
+            due_status = "Pull Ahead"
+        else:
+            due_status = "Not Due"
+
+        if due_status == "Not Due":
+            continue
+
+        priority_rank = pd.to_numeric(g["_Priority Rank"], errors="coerce").min()
+        if pd.isna(priority_rank):
+            priority_rank = 9999
+
+        days_overdue = (start_ts - next_office_due).days if pd.notna(next_office_due) else 999
+
+        rows.append({
+            "_Office Key": g["_Office Key"].iloc[0],
+            "Practice Name": g["_Practice Name"].dropna().astype(str).iloc[0],
+            "Practice Address": g["_Practice Address"].dropna().astype(str).iloc[0],
+            "City": g["_City"].dropna().astype(str).iloc[0],
+            "Zip": g["_Zip"].dropna().astype(str).iloc[0],
+            "Doctors": ", ".join(sorted(g["_Doctor Name"].dropna().astype(str).unique())),
+            "Doctor Count": int(g["_Doctor Name"].nunique()),
+            "Route Cluster": route,
+            "Route Sort": route_sort_value(route),
+            "Route Guidance": route_direction_label(route),
+            "Priority Rank": int(priority_rank),
+            "Last Office Visit": last_office_visit.date() if pd.notna(last_office_visit) else "",
+            "Next Office Due": next_office_due.date() if pd.notna(next_office_due) else "",
+            "Due Status": due_status,
+            "_Days Overdue": days_overdue,
+        })
+
+    offices = pd.DataFrame(rows)
+    if offices.empty:
+        return offices
+
+    status_order = {"Overdue": 0, "No Visit History": 1, "Due During Range": 2, "Pull Ahead": 3}
+    offices["_Status Sort"] = offices["Due Status"].map(status_order).fillna(9)
+    offices = offices.sort_values(
+        ["_Status Sort", "Route Sort", "Priority Rank", "_Days Overdue", "Practice Name"],
+        ascending=[True, True, True, False, True]
+    ).reset_index(drop=True)
+    return offices
+
+def office_schedule_row(row, visit_date, note=""):
+    return {
+        "Date": visit_date,
+        "Day": visit_date.strftime("%A"),
+        "Stop #": "",
+        "Practice Name": row["Practice Name"],
+        "Practice Address": row["Practice Address"],
+        "City": row["City"],
+        "Zip": row["Zip"],
+        "Doctors Credited": row["Doctors"],
+        "Doctor Count": row["Doctor Count"],
+        "Route Cluster": row["Route Cluster"],
+        "Route Sort": row["Route Sort"],
+        "Route Guidance": row["Route Guidance"],
+        "Priority Rank": row["Priority Rank"],
+        "Last Office Visit": row["Last Office Visit"],
+        "Next Office Due": row["Next Office Due"],
+        "Due Status": row["Due Status"],
+        "Planner Note": note,
+        "Visit Completed": "",
+        "Updated Notes": "",
+    }
+
+def assign_office_stop_order(day_df):
+    if day_df.empty:
+        return day_df
+    ordered = day_df.copy()
+    ordered["_Local Sort"] = ordered["Zip"].apply(clean_zip)
+    ordered = ordered.sort_values(["Route Sort", "_Local Sort", "Priority Rank", "Practice Name"], ascending=[True, True, True, True])
+    ordered["Stop #"] = range(1, len(ordered) + 1)
+    return ordered.drop(columns=["_Local Sort"], errors="ignore")
+
+def generate_date_range_offices(doctors, start_date, end_date, blocked_dates, max_per_day, target_per_day=7, day_route_preferences=None, day_max_overrides=None):
+    day_route_preferences = day_route_preferences or {}
+    day_max_overrides = day_max_overrides or {}
+
+    offices = build_offices(doctors, start_date, end_date)
+    rows = []
+    if offices.empty:
+        return pd.DataFrame(), offices
+
+    remaining = offices.copy()
+    days = workdays_for_range(start_date, end_date, blocked_dates)
+
+    for dt in days:
+        if remaining.empty:
+            break
+
+        day_limit = min(int(max_per_day), int(day_max_overrides.get(dt, target_per_day)))
+        target = min(int(target_per_day), day_limit, len(remaining))
+        if target <= 0:
+            continue
+
+        preferred_routes = day_route_preferences.get(dt, [])
+        if preferred_routes:
+            preferred = remaining[remaining["Route Cluster"].isin(preferred_routes)]
+            chosen_idx = list(preferred.index[:target])
+            note = "Built around calendar event / preferred route"
+            if not chosen_idx:
+                chosen_idx = list(remaining.index[:target])
+                note = "No preferred-route offices due; filled with next due offices"
+        else:
+            first_route = remaining.iloc[0]["Route Cluster"]
+            same_route = list(remaining[remaining["Route Cluster"] == first_route].index[:target])
+            chosen_idx = same_route
+            if len(chosen_idx) < min(target, 4):
+                for idx in remaining.index:
+                    if idx not in chosen_idx:
+                        chosen_idx.append(idx)
+                    if len(chosen_idx) >= target:
+                        break
+            route_count = remaining.loc[chosen_idx]["Route Cluster"].nunique()
+            note = "Office-based route group" if route_count == 1 else "Route topped off with next due offices"
+
+        for _, r in remaining.loc[chosen_idx].iterrows():
+            rows.append(office_schedule_row(r, dt, note))
+
+        remaining = remaining.drop(index=chosen_idx, errors="ignore")
+
+    schedule = pd.DataFrame(rows)
+    if not schedule.empty:
+        ordered_days = []
+        for _, day_df in schedule.groupby("Date", sort=True):
+            ordered_days.append(assign_office_stop_order(day_df))
+        schedule = pd.concat(ordered_days, ignore_index=True)
+        schedule["_Stop Sort"] = pd.to_numeric(schedule["Stop #"], errors="coerce").fillna(0)
+        schedule = schedule.sort_values(["Date", "_Stop Sort", "Route Sort", "Priority Rank", "Practice Name"], na_position="last").drop(columns=["_Stop Sort"]).reset_index(drop=True)
+
+    return schedule, offices
+
+def export_office_excel(schedule, offices, excluded):
+    output = io.BytesIO()
+    with pd.ExcelWriter(output, engine="openpyxl") as writer:
+        schedule.to_excel(writer, sheet_name="Office Schedule", index=False)
+        offices.to_excel(writer, sheet_name="Due Offices", index=False)
+        excluded.to_excel(writer, sheet_name="Excluded", index=False)
+
+        for ws in writer.book.worksheets:
+            ws.freeze_panes = "A2"
+            for row in ws.iter_rows():
+                for cell in row:
+                    cell.alignment = cell.alignment.copy(wrap_text=True, vertical="top")
+            for col in ws.columns:
+                letter = col[0].column_letter
+                max_len = max([len(str(c.value)) if c.value is not None else 0 for c in col] + [8])
+                ws.column_dimensions[letter].width = min(max(max_len + 2, 10), 45)
+
+    output.seek(0)
+    return output
 
 def export_excel(schedule, due, excluded):
     output = io.BytesIO()
@@ -971,18 +1173,13 @@ def public_site_warning():
     )
 
 st.title(APP_TITLE)
-st.caption("Upload visit reports, enforce visit rules, generate a full-month territory schedule, and export Excel.")
+st.caption("Upload visit reports, plan a custom date range by office stop, and export Excel.")
 
 with st.sidebar:
-    st.header("Month Setup")
+    st.header("Date Range Setup")
     today = date.today()
-    selected_year = st.number_input("Year", min_value=2024, max_value=2035, value=today.year, step=1)
-    selected_month = st.selectbox(
-        "Month",
-        options=list(range(1, 13)),
-        index=today.month - 1,
-        format_func=lambda m: calendar.month_name[m],
-    )
+    selected_start_date = st.date_input("Start date", value=date(2026, 7, 7))
+    selected_end_date = st.date_input("End date", value=date(2026, 7, 10))
 
     st.header("July calendar")
     st.caption("Edit these July commitments before generating the schedule.")
@@ -1023,7 +1220,7 @@ with st.sidebar:
         value="2026-07-01 = 5\n2026-07-16 = 5\n2026-07-28 = 5\n2026-07-31 = 4",
         help="Use this for dinners, meetings, and lunch & learns. Lunch & Learn default is 4 total stops including the meeting office."
     )
-    max_per_day = st.slider("Max offices per field day", 6, 10, RULES["target_offices_per_day"])
+    max_per_day = st.slider("Max office stops per field day", 6, 10, 10)
 
     st.header("Rules")
     st.write(f"Start/end base: **{RULES['home_base']}**")
@@ -1033,7 +1230,7 @@ with st.sidebar:
     monday_office_day = st.checkbox("Auto-block every Monday as La Jolla office day", value=False)
     st.caption("July defaults: 7/3 and 7/14 are blocked. 7/13 is available as a field day.")
 
-tab_upload, tab_plan, tab_history, tab_rules = st.tabs(["Upload", "Plan Month", "Upload History", "Rules"])
+tab_upload, tab_plan, tab_history, tab_rules = st.tabs(["Upload", "Plan Date Range", "Upload History", "Rules"])
 
 with tab_upload:
     public_site_warning()
@@ -1075,47 +1272,51 @@ with tab_plan:
     else:
         doctors = st.session_state["doctors"]
         blocked_dates = parse_dates(blocked_text)
-        locks = parse_locks(lock_text)
         day_route_preferences = parse_route_preferences(preferred_routes_text)
         day_max_overrides = parse_day_limits(day_limits_text)
 
-        if st.button("Generate full-month schedule", type="primary"):
-            schedule, due = generate_month(
+        st.subheader("Plan Date Range")
+        st.caption("This schedules office stops, not individual doctors. All doctors at the same office receive visit credit for one physical stop.")
+        st.write(f"Planning: **{selected_start_date}** through **{selected_end_date}**")
+
+        if selected_end_date < selected_start_date:
+            st.error("End date must be after start date.")
+        elif st.button("Build office schedule", type="primary"):
+            schedule, offices = generate_date_range_offices(
                 doctors,
-                int(selected_year),
-                int(selected_month),
+                selected_start_date,
+                selected_end_date,
                 blocked_dates,
-                locks,
                 int(max_per_day),
-                monday_office_day=monday_office_day,
+                target_per_day=7,
                 day_route_preferences=day_route_preferences,
                 day_max_overrides=day_max_overrides,
             )
             st.session_state["schedule"] = schedule
-            st.session_state["due"] = due
+            st.session_state["due_offices"] = offices
 
         if "schedule" in st.session_state:
             schedule = st.session_state["schedule"]
-            due = st.session_state["due"]
+            due_offices = st.session_state.get("due_offices", pd.DataFrame())
             excluded = doctors[~doctors["_Routable"]].copy()
 
             if schedule.empty:
-                st.warning("No due doctors found for the selected month/rules.")
+                st.warning("No due offices found for the selected date range/rules.")
             else:
-                st.subheader("Editable monthly schedule")
-                st.caption("Make changes here before exporting. The exported Excel has blank columns for visit completion and updated notes.")
+                st.subheader("Editable office schedule")
+                st.caption("Each row is one physical office stop. The Doctors Credited column shows everyone who receives visit credit.")
                 edited = st.data_editor(schedule, use_container_width=True, num_rows="dynamic", key="schedule_editor")
 
-                st.subheader("Daily counts")
-                counts = edited.groupby(["Date", "Day"]).size().reset_index(name="Office Count")
+                st.subheader("Daily stop counts")
+                counts = edited.groupby(["Date", "Day"]).size().reset_index(name="Office Stop Count")
                 st.dataframe(counts, use_container_width=True, hide_index=True)
 
-                export = export_excel(
+                export = export_office_excel(
                     edited,
-                    due[["_Doctor Name", "_Practice Name", "_Practice Address", "_City", "_Zip", "_Route Cluster", "_Route Guidance", "_Priority Rank", "_Last Visit", "_Next Due", "_Due Status", "_Days Overdue", "_Notes"]],
+                    due_offices,
                     excluded[["_Doctor Name", "_Practice Name", "_Practice Address", "_City", "_Zip", "_Route Cluster", "_Route Guidance", "_Excluded Reason", "_Notes"]],
                 )
-                file_name = f"territory_monthly_schedule_{selected_year}_{int(selected_month):02d}.xlsx"
+                file_name = f"territory_office_schedule_{selected_start_date}_to_{selected_end_date}.xlsx"
                 st.download_button(
                     "Download Excel schedule",
                     data=export,
