@@ -169,7 +169,7 @@ DOCTOR_ROUTE_OVERRIDES = {
     'Chen, Edwin S'.lower(): 'College Area',
     'Chen, Oliver'.lower(): 'Carlsbad',
     'Cheng, Patty'.lower(): 'Rancho Bernardo',
-    'Chisholm, Karen'.lower(): 'Point Loma',
+    'Chisholm, Karen'.lower(): 'Poway',
     'Chung, Allen'.lower(): 'Mira Mesa',
     'Coden, Daniel'.lower(): 'Do Not Route',
     'Coleman, Brooke'.lower(): '4S',
@@ -980,7 +980,7 @@ def first_nonempty(series, default=""):
         pass
     return default
 
-def build_offices(doctors, range_start, range_end, locks=None):
+def build_offices(doctors, range_start, range_end, locks=None, allow_pull_ahead=False):
     d = doctors[doctors["_Routable"]].copy()
     if d.empty:
         return pd.DataFrame()
@@ -1016,7 +1016,9 @@ def build_offices(doctors, range_start, range_end, locks=None):
     rows = []
     start_ts = pd.Timestamp(range_start)
     end_ts = pd.Timestamp(range_end)
-    pull_ahead_end = end_ts + pd.Timedelta(days=21)
+    # Default behavior: do not schedule offices before they are due.
+    # Pull-ahead is reserved for a future explicit setting, not normal weekly route building.
+    pull_ahead_end = end_ts + (pd.Timedelta(days=21) if allow_pull_ahead else pd.Timedelta(days=0))
 
     for _, g in d.groupby("_Office Key", dropna=False):
         g = g.copy()
@@ -1037,7 +1039,7 @@ def build_offices(doctors, range_start, range_end, locks=None):
             due_status = "Overdue"
         elif next_office_due <= end_ts:
             due_status = "Due During Range"
-        elif next_office_due <= pull_ahead_end and (pd.isna(last_office_visit) or last_office_visit <= start_ts - pd.Timedelta(days=28)):
+        elif allow_pull_ahead and next_office_due <= pull_ahead_end and (pd.isna(last_office_visit) or last_office_visit <= start_ts - pd.Timedelta(days=28)):
             due_status = "Pull Ahead"
         else:
             due_status = "Not Due"
@@ -1117,8 +1119,11 @@ def assign_office_stop_order(day_df):
 def generate_date_range_offices(doctors, start_date, end_date, blocked_dates, max_per_day, target_per_day=7, day_route_preferences=None, day_max_overrides=None, locks=None):
     day_route_preferences = day_route_preferences or {}
     day_max_overrides = day_max_overrides or {}
+    min_per_day = RULES["min_offices_per_day"]
 
-    offices = build_offices(doctors, start_date, end_date, locks=locks)
+    # Build from offices that are actually due in the selected date range.
+    # Do not pull future offices forward just to clear a territory.
+    offices = build_offices(doctors, start_date, end_date, locks=locks, allow_pull_ahead=False)
     rows = []
     if offices.empty:
         return pd.DataFrame(), offices
@@ -1155,17 +1160,22 @@ def generate_date_range_offices(doctors, start_date, end_date, blocked_dates, ma
                 chosen_idx = list(remaining.index[:target])
                 note = "No preferred-route offices due; filled with next due offices"
         else:
-            first_route = remaining.iloc[0]["Route Cluster"]
+            # Choose among offices that are due now/in-range, not by trying to clear an entire area.
+            # Start with the route cluster that has the best count for today, then only top off
+            # with other due offices when needed to avoid a too-light day.
+            route_counts = remaining.groupby("Route Cluster").size().sort_values(ascending=False)
+            first_route = route_counts.index[0]
             same_route = list(remaining[remaining["Route Cluster"] == first_route].index[:target])
             chosen_idx = same_route
-            if len(chosen_idx) < min(target, 4):
+            desired_min = min(target, min_per_day, len(remaining))
+            if len(chosen_idx) < desired_min:
                 for idx in remaining.index:
                     if idx not in chosen_idx:
                         chosen_idx.append(idx)
                     if len(chosen_idx) >= target:
                         break
             route_count = remaining.loc[chosen_idx]["Route Cluster"].nunique()
-            note = "Office-based route group" if route_count == 1 else "Route topped off with next due offices"
+            note = "Due offices grouped by route" if route_count == 1 else "Due offices topped off to avoid a light day"
 
         for _, r in remaining.loc[chosen_idx].iterrows():
             rows.append(office_schedule_row(r, dt, note))
