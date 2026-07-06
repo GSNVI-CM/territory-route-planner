@@ -34,9 +34,7 @@ RULES = {
     "excluded_keywords": [
         "won't visit", "wont visit", "do not visit", "do not route", "never visit",
         "not routable", "out of territory", "retired", "rady", "hospital",
-        "nvision", "nv vision", "acuity eye group", "angelique pilar",
-        "naval", "navy", "navy airstation", "navy air station", "naval air station",
-        "military base", "credentials required", "base access", "hawaii"
+        "nvision", "nv vision", "acuity eye group", "angelique pilar"
     ],
 }
 
@@ -500,23 +498,6 @@ def clean_zip(value):
     match = re.search(r"\b(\d{5})\b", str(value))
     return match.group(1) if match else ""
 
-def has_usable_office_info(practice, address, zip_value):
-    """Return False when an office needs cleanup before it can be routed."""
-    practice_text = str(practice or "").strip().lower()
-    address_text = str(address or "").strip().lower()
-    zip_text = clean_zip(zip_value)
-    bad_practice = practice_text in ["", "nan", "none", "unnamed office"]
-    bad_address = address_text in ["", "nan", "none"]
-    return (not bad_practice) and ((not bad_address) or bool(zip_text))
-
-
-def is_sd_territory_zip(zip_value):
-    """San Diego territory zips start with 919, 920, or 921. Blank zips are handled as cleanup-needed elsewhere."""
-    z = clean_zip(zip_value)
-    if not z:
-        return True
-    return z.startswith(("919", "920", "921"))
-
 def infer_route(row, route_col, address_col, city_col, zip_col):
     # Keep an explicit route/pod when the spreadsheet already has one.
     if route_col and pd.notna(row.get(route_col)) and str(row.get(route_col)).strip():
@@ -688,15 +669,6 @@ def prepare_data(sheets):
         no_mask = out[routable_col].astype(str).str.lower().str.strip().isin(["no", "n", "false", "0", "not routable", "do not visit"])
         out.loc[no_mask & (out["_Excluded Reason"] == ""), "_Excluded Reason"] = "marked not routable"
 
-    cleanup_route_mask = out["_Route Cluster"].astype(str).str.lower().isin(["unassigned", "needs review", "out of territory"])
-    out.loc[cleanup_route_mask & (out["_Excluded Reason"] == ""), "_Excluded Reason"] = "needs route cleanup before routing"
-
-    office_info_mask = ~out.apply(lambda r: has_usable_office_info(r.get("_Practice Name", ""), r.get("_Practice Address", ""), r.get("_Zip", "")), axis=1)
-    out.loc[office_info_mask & (out["_Excluded Reason"] == ""), "_Excluded Reason"] = "needs office/practice/address cleanup before routing"
-
-    out_of_zip_mask = ~out["_Zip"].apply(is_sd_territory_zip)
-    out.loc[out_of_zip_mask & (out["_Excluded Reason"] == ""), "_Excluded Reason"] = "out of San Diego territory ZIP"
-
     out["_Routable"] = out["_Excluded Reason"].eq("")
     out["_Cadence Days"] = out["_Priority Rank"].apply(cadence_from_rank)
 
@@ -709,10 +681,6 @@ def prepare_data(sheets):
     out.loc[out["_Next Due"] <= today + pd.Timedelta(days=RULES["due_lookahead_days"]), "_Due Status"] = "Due Soon"
     out.loc[out["_Next Due"] <= today, "_Due Status"] = "Overdue"
     out.loc[out["_Last Visit"].isna(), "_Due Status"] = "No Visit History"
-
-    out.loc[~out["_Routable"], "_Next Due"] = pd.NaT
-    out.loc[~out["_Routable"], "_Days Overdue"] = pd.NA
-    out.loc[~out["_Routable"], "_Due Status"] = "Not Routable"
 
     return out
 
@@ -1059,17 +1027,6 @@ def build_offices(doctors, range_start, range_end, locks=None, allow_pull_ahead=
             # Save it for the locked date later; do not schedule it early.
             continue
         route = normalize_route_name(first_nonempty(g["_Route Cluster"], "Unassigned")) if len(g) else "Unassigned"
-        if route in ["Unassigned", "Needs Review", "Out of Territory"]:
-            continue
-
-        practice_name = first_nonempty(g["_Practice Name"], "")
-        practice_address = first_nonempty(g["_Practice Address"], "")
-        zip_for_office = first_nonempty(g["_Zip"], "")
-        if not has_usable_office_info(practice_name, practice_address, zip_for_office):
-            continue
-        if not is_sd_territory_zip(zip_for_office):
-            continue
-
         last_visits = pd.to_datetime(g["_Last Visit"], errors="coerce")
         next_dues = pd.to_datetime(g["_Next Due"], errors="coerce")
 
@@ -1098,10 +1055,10 @@ def build_offices(doctors, range_start, range_end, locks=None, allow_pull_ahead=
 
         rows.append({
             "_Office Key": g["_Office Key"].iloc[0],
-            "Practice Name": practice_name,
-            "Practice Address": practice_address,
+            "Practice Name": first_nonempty(g["_Practice Name"], "Unnamed Office"),
+            "Practice Address": first_nonempty(g["_Practice Address"], ""),
             "City": first_nonempty(g["_City"], ""),
-            "Zip": zip_for_office,
+            "Zip": first_nonempty(g["_Zip"], ""),
             "Doctors": ", ".join(sorted(g["_Doctor Name"].dropna().astype(str).unique())),
             "Doctor Count": int(g["_Doctor Name"].nunique()),
             "Route Cluster": route,
