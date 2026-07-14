@@ -34,7 +34,26 @@ RULES = {
     "excluded_keywords": [
         "won't visit", "wont visit", "do not visit", "do not route", "never visit",
         "not routable", "out of territory", "retired", "rady", "hospital",
-        "nvision", "nv vision", "acuity eye group", "angelique pilar"
+        "nvision", "nv vision", "acuity eye group", "angelique pilar",
+        "not part of my route",
+    ],
+    # Institution/referral-network keywords. Checked ONLY against the practice name
+    # and doctor name fields (never the address), so a real address like
+    # "Scripps Ranch" never gets caught by the "scripps" keyword below.
+    "excluded_practice_keywords": [
+        "kaiser", "sharp", "scripps", "ucsd", "shiley", "sutter health",
+        "army dr", "nvision", "nv vision", "acuity eye group", "rady",
+        "lake travis", "palo alto vision",
+    ],
+    # Zips confirmed outside Misty's driveable territory (out of state / far
+    # out of San Diego county). These come up as referral-only surgeons/offices.
+    "out_of_territory_zips": [
+        "92543", "92562",  # Hemet / Menifee, Riverside County
+        "90212",           # Beverly Hills
+        "92225", "92227",  # Blythe
+        "92251", "92243", "92213",  # Imperial County / El Centro
+        "93405",           # San Luis Obispo
+        "85364",           # Yuma, AZ
     ],
 }
 
@@ -179,10 +198,15 @@ DOCTOR_ROUTE_OVERRIDES = {
     'Dexter, Amanda'.lower(): 'Del Mar',
     'Diaz, Yvette'.lower(): 'Santee',
     'Dr. Denis Iwamoto'.lower(): 'Mira Mesa',
+    'Iwamoto, Denis'.lower(): 'Mira Mesa',
     'Dr. Eli Ben-Moshe'.lower(): 'Ocean Beach',
+    'Ben-Moshe, Eli'.lower(): 'Ocean Beach',
     'Dr. Shervin Alborzian'.lower(): 'UTC',
+    'Alborzian, Shervin'.lower(): 'UTC',
     'Dr. Victoria Voung'.lower(): 'Santee',
+    'Voung, Victoria'.lower(): 'Santee',
     'Dr. Viet Nguyen'.lower(): 'College Area',
+    'Nguyen, Viet'.lower(): 'College Area',
     'Eck, Thomas'.lower(): 'Sports Arena',
     'Fitzpatrick, Michelle'.lower(): 'Carmel Mountain',
     'Fleming, John C'.lower(): 'Spring Valley',
@@ -249,6 +273,7 @@ DOCTOR_ROUTE_OVERRIDES = {
     'Tang, Ashley'.lower(): 'Sports Arena',
     'Tavakoli, Melody'.lower(): 'Pacific Beach',
     'Tayman, Steven'.lower(): 'UTC',
+    'Than, Cindy'.lower(): 'Do Not Route',
     'Thai, Amanda'.lower(): 'Kearny Mesa',
     'Thiem, Christine'.lower(): 'Sports Arena',
     'Tran, Linda'.lower(): '4S',
@@ -343,6 +368,15 @@ ZIP_ROUTE_OVERRIDES = {
     "91977": "La Mesa / Lemon Grove / Spring Valley",
     "92071": "Santee / Tierrasanta",
     "92124": "Santee / Tierrasanta",
+    "92102": "Downtown / Coronado / Hillcrest",
+    "92105": "Downtown / Coronado / Hillcrest",
+    "92107": "Sports Arena / Point Loma / Bay Park",
+    "92109": "Pacific Beach",
+    "92119": "La Mesa / Lemon Grove / Spring Valley",
+    "92120": "La Mesa / Lemon Grove / Spring Valley",
+    "92021": "El Cajon / Rancho San Diego",
+    "92007": "Encinitas Split Review",
+    "92014": "Del Mar / Solana / South Encinitas",
 }
 
 CITY_ROUTE_OVERRIDES = {
@@ -634,7 +668,8 @@ def prepare_data(sheets):
     # User-taught routing: prefer Misty's working route group when present,
     # otherwise use doctor-specific route rules learned from the July schedule corrections.
     if correct_route_col:
-        mask = out[correct_route_col].notna() & out[correct_route_col].astype(str).str.strip().ne("")
+        correct_vals = out[correct_route_col].astype(str).str.strip()
+        mask = out[correct_route_col].notna() & ~correct_vals.str.lower().isin(["", "nan", "none", "unassigned"])
         out.loc[mask, "_Route Cluster"] = out.loc[mask, correct_route_col].astype(str).str.strip().apply(normalize_route_name)
 
     out["_Doctor Key"] = out["_Doctor Name"].astype(str).str.strip().str.lower()
@@ -664,6 +699,32 @@ def prepare_data(sheets):
     for kw in RULES["excluded_keywords"]:
         mask = all_text.str.contains(re.escape(kw), na=False)
         out.loc[mask & (out["_Excluded Reason"] == ""), "_Excluded Reason"] = kw
+
+    # Institution/referral-network exclusion: only look at practice name and doctor
+    # name text, never the address, so "Scripps Ranch" (a real neighborhood/address)
+    # never gets swept up by the "scripps" keyword meant for Scripps Health/hospital.
+    practice_and_name_text = (
+        out["_Practice Name"].fillna("").astype(str).str.lower() + " " +
+        out["_Doctor Name"].fillna("").astype(str).str.lower()
+    )
+    for kw in RULES["excluded_practice_keywords"]:
+        mask = practice_and_name_text.str.contains(re.escape(kw), na=False)
+        out.loc[mask & (out["_Excluded Reason"] == ""), "_Excluded Reason"] = f"referral network / hospital system: {kw}"
+
+    # Out-of-territory zip exclusion (out of state / far outside San Diego county)
+    zip_series = out["_Zip"].apply(clean_zip)
+    out_of_area_mask = zip_series.isin(RULES["out_of_territory_zips"])
+    out.loc[out_of_area_mask & (out["_Excluded Reason"] == ""), "_Excluded Reason"] = "out of territory (zip)"
+
+    # Catch-all: if a doctor still has no route AND no address/city/zip on file at
+    # all, there is nothing to schedule against. Hold these out instead of
+    # generating a placeholder "Unnamed Office" stop.
+    no_address = out["_Practice Address"].fillna("").astype(str).str.strip().str.lower().isin(["", "nan"])
+    no_city = out["_City"].fillna("").astype(str).str.strip().str.lower().isin(["", "nan"])
+    no_zip = zip_series.eq("")
+    still_unassigned = out["_Route Cluster"].eq("Unassigned")
+    no_location_mask = no_address & no_city & no_zip & still_unassigned
+    out.loc[no_location_mask & (out["_Excluded Reason"] == ""), "_Excluded Reason"] = "no address/city/zip on file - needs manual info"
 
     if routable_col:
         no_mask = out[routable_col].astype(str).str.lower().str.strip().isin(["no", "n", "false", "0", "not routable", "do not visit"])
