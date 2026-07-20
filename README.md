@@ -1,57 +1,71 @@
-# Territory Route Planner
+# Professional Relations Platform — Version 1
 
-A free-hostable Streamlit web app for territory visit planning.
+A private Streamlit application for territory planning, visit execution, relationship memory, referral analysis, leadership publication, and reporting.
 
-## What it does
+## Current build status
 
-- Uploads the current visit report Excel file
-- Saves upload history
-- Reads Doctors and Visits data
-- Enforces visit cadence rules
-- Excludes non-routable / do-not-visit accounts
-- Generates a full-month schedule
-- Gives calendar control for blocked dates and locked visits
-- Uses smart grouping and visit priority, not maps
-- Exports a clean Excel schedule with note/update columns
+The **Foundation module** is implemented:
 
-## App name
+- Shared database connection layer
+- PostgreSQL support for free hosted storage
+- Local SQLite development fallback
+- Transaction helper
+- Migration runner and migration tracking
+- Consultant and Leadership authentication shell
+- Streamlit configuration and secrets template
+- Existing Territory Route Planner functionality preserved during modular migration
 
-The app is intentionally neutral: **Territory Route Planner**.
+The frozen engineering specification remains the implementation source of truth.
 
-## Free website deployment
+## Project structure
 
-This is ready for Streamlit Community Cloud.
+```text
+app.py
+config.py
+database/
+  connection.py
+  migrations.py
+  schema.py
+services/
+  auth_service.py
+.streamlit/
+  config.toml
+  secrets.toml.example
+```
 
-### Files required for deployment
-
-- `app.py`
-- `requirements.txt`
-- `.streamlit/config.toml`
-
-### Deploy steps
-
-1. Create a GitHub account or use an existing one.
-2. Create a new GitHub repository, for example `territory-route-planner`.
-3. Upload these files to that repository.
-4. Go to Streamlit Community Cloud: `share.streamlit.io`
-5. Sign in with GitHub.
-6. Click **Create app**.
-7. Choose the repository, branch, and `app.py`.
-8. Pick a neutral URL, for example:
-   - `territory-route-planner.streamlit.app`
-   - `practice-route-planner.streamlit.app`
-   - `field-visit-planner.streamlit.app`
-9. Click **Deploy**.
-
-## Important note about free hosting
-
-Free Streamlit hosting can store files while the app is running, but long-term file persistence is not guaranteed. The app includes a backup download for upload history. For a future version, use a small database service if permanent cloud storage is required.
-
-## Local test option
-
-You can also run it locally:
+## Local setup
 
 ```bash
+python -m venv .venv
+# Windows
+.venv\Scripts\activate
+# macOS/Linux
+source .venv/bin/activate
+
 pip install -r requirements.txt
 streamlit run app.py
 ```
+
+When no users are configured, local development opens as the Consultant role. This fallback is disabled when `[auth]` users are configured in Streamlit secrets.
+
+## Hosted database
+
+Version 1 expects a PostgreSQL-compatible hosted relational database. Put the SQLAlchemy connection URL in Streamlit secrets:
+
+```toml
+DATABASE_URL = "postgresql+psycopg://USER:PASSWORD@HOST:5432/DATABASE?sslmode=require"
+```
+
+The app applies foundation migrations at startup. The local Streamlit filesystem is not treated as authoritative production storage.
+
+## Authentication configuration
+
+Use `.streamlit/secrets.toml.example` as the template. Add one or more users with the exact role `Consultant` or `Leadership`. Do not commit real passwords or database credentials.
+
+## Streamlit Community Cloud
+
+1. Upload the project files to GitHub.
+2. Create or open the app in Streamlit Community Cloud.
+3. Set the main file path to `app.py`.
+4. Add the database and authentication values under **App settings → Secrets**.
+5. Deploy or reboot the app.

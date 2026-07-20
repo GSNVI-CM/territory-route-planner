@@ -10,17 +10,27 @@ import hashlib
 import io
 import json
 
-APP_TITLE = "Territory Route Planner"
-APP_DIR = Path(__file__).parent
-DATA_DIR = APP_DIR / "data"
-UPLOAD_DIR = DATA_DIR / "uploads"
-EXPORT_DIR = DATA_DIR / "exports"
-DB_PATH = DATA_DIR / "app_history.sqlite"
+from config import APP_DIR, DATA_DIR, EXPORT_DIR, UPLOAD_DIR, settings
+from database.connection import database_healthcheck
+from database.migrations import initialize_database
+from services.auth_service import require_authentication, sign_out
+
+APP_TITLE = settings.app_title
+DB_PATH = DATA_DIR / "legacy_route_planner_history.sqlite"
 
 UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
 EXPORT_DIR.mkdir(parents=True, exist_ok=True)
 
 st.set_page_config(page_title=APP_TITLE, layout="wide")
+
+# Foundation startup: schema migrations run before protected application content.
+try:
+    initialize_database()
+except Exception as exc:
+    st.error(f"Database initialization failed: {exc}")
+    st.stop()
+
+AUTHENTICATED_USER = require_authentication()
 
 RULES = {
     "home_base": "North Park",
@@ -1317,6 +1327,15 @@ st.title(APP_TITLE)
 st.caption("Upload visit reports, plan a custom date range by office stop, and export Excel.")
 
 with st.sidebar:
+    st.caption(f"Signed in as **{AUTHENTICATED_USER.display_name}** ({AUTHENTICATED_USER.role})")
+    database_label = "Hosted database" if settings.uses_hosted_database else "Local development database"
+    if database_healthcheck():
+        st.caption(f"Database: {database_label}")
+    else:
+        st.error("Database connection unavailable")
+    if st.button("Sign out"):
+        sign_out()
+    st.divider()
     st.header("Date Range Setup")
     today = date.today()
     selected_start_date = st.date_input("Start date", value=date(2026, 7, 7))
